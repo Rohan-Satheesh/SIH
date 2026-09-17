@@ -1,0 +1,156 @@
+{
+  "type": "FeatureCollection",
+  "name": "india_marine_protected_areas",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-001",
+        "name": "Gulf of Mannar Marine National Park",
+        "state": "Tamil Nadu",
+        "category": "Marine National Park",
+        "area_sqkm": 560.0,
+        "key_species": "Dugong, Coral Reefs, Sea Turtles, Seagrass",
+        "protection_level": "Strict No-Take Marine Sanctuary"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [78.85, 9.15],
+            [79.25, 9.35],
+            [79.45, 9.20],
+            [79.15, 8.85],
+            [78.65, 8.75],
+            [78.50, 8.95],
+            [78.85, 9.15]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-002",
+        "name": "Marine National Park (Gulf of Kutch)",
+        "state": "Gujarat",
+        "category": "Marine National Park",
+        "area_sqkm": 458.0,
+        "key_species": "Corals, Mangroves, Sponges, Jellyfish, Dolphins",
+        "protection_level": "Strict Marine Protected Reserve"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [69.10, 22.45],
+            [69.60, 22.75],
+            [70.15, 22.80],
+            [70.25, 22.60],
+            [69.75, 22.40],
+            [69.25, 22.25],
+            [69.10, 22.45]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-003",
+        "name": "Gahirmatha Marine Sanctuary",
+        "state": "Odisha",
+        "category": "Marine Wildlife Sanctuary",
+        "area_sqkm": 1435.0,
+        "key_species": "Olive Ridley Sea Turtles (Mass Nesting/Arribada)",
+        "protection_level": "Seasonal Fishing Ban & Turtle Sanctuary"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [86.75, 20.95],
+            [87.15, 20.85],
+            [87.35, 20.55],
+            [86.95, 20.35],
+            [86.65, 20.65],
+            [86.75, 20.95]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-004",
+        "name": "Malvan Marine Sanctuary",
+        "state": "Maharashtra",
+        "category": "Marine Sanctuary",
+        "area_sqkm": 29.12,
+        "key_species": "Coral Reefs, Sea Anemones, Pearl Oysters",
+        "protection_level": "Coastal Ecological Buffer"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [73.42, 16.08],
+            [73.50, 16.08],
+            [73.50, 15.98],
+            [73.42, 15.98],
+            [73.42, 16.08]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-005",
+        "name": "Mahatma Gandhi Marine National Park (Wandoor)",
+        "state": "Andaman and Nicobar Islands",
+        "category": "Marine National Park",
+        "area_sqkm": 281.5,
+        "key_species": "Pristine Coral Atolls, Hawksbill Turtles, Saltwater Crocodiles",
+        "protection_level": "High Sensitivity Marine Biosphere"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [92.50, 11.65],
+            [92.65, 11.65],
+            [92.65, 11.45],
+            [92.50, 11.45],
+            [92.50, 11.65]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "mpa_id": "MPA-IND-006",
+        "name": "Sundarbans Biosphere Marine Zone",
+        "state": "West Bengal",
+        "category": "Marine Biosphere Reserve",
+        "area_sqkm": 2120.0,
+        "key_species": "Estuarine Crocodiles, Gangetic Dolphin, Mangrove Habitat",
+        "protection_level": "UNESCO World Heritage Marine Sanctuary"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [88.20, 21.90],
+            [89.15, 21.90],
+            [89.15, 21.25],
+            [88.20, 21.25],
+            [88.20, 21.90]
+          ]
+        ]
+      }
+    }
+  ]
+}

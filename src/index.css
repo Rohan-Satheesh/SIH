@@ -1,0 +1,223 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --color-background: #F8FCFD;
+  --color-foreground: #173042;
+  
+  --color-card: #FFFFFF;
+  --color-card-foreground: #173042;
+  
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #173042;
+  
+  /* Primary Marine Palette */
+  --color-primary: #176B87;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #0B3954;
+  --color-secondary-foreground: #FFFFFF;
+  
+  /* Calming Accents */
+  --color-ocean: #176B87;
+  --color-ocean-dark: #0B3954;
+  --color-sky-calm: #DFF3FA;
+  --color-seafoam: #D9F3E6;
+  --color-sand: #FFF7E6;
+  --color-dark-text: #173042;
+  
+  /* Semantic Tones */
+  --color-safe: #16865B;
+  --color-safe-bg: #E8F7F0;
+  --color-warning: #D99116;
+  --color-warning-bg: #FEF6E8;
+  --color-danger: #C0392B;
+  --color-danger-bg: #FDF0EE;
+  --color-info: #176B87;
+  --color-info-bg: #DFF3FA;
+  
+  --color-muted: #F1F6F8;
+  --color-muted-foreground: #5B7282;
+  --color-border: #D8E5EB;
+  --color-input: #FFFFFF;
+  --color-ring: #176B87;
+
+  --font-sans: 'Manrope', 'Noto Sans Malayalam', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+@layer base {
+  :root {
+    --background: #F8FCFD;
+    --foreground: #173042;
+    --card: #FFFFFF;
+    --card-foreground: #173042;
+    --popover: #FFFFFF;
+    --popover-foreground: #173042;
+    --primary: #176B87;
+    --primary-foreground: #FFFFFF;
+    --secondary: #0B3954;
+    --secondary-foreground: #FFFFFF;
+    --muted: #F1F6F8;
+    --muted-foreground: #5B7282;
+    --border: #D8E5EB;
+    --input: #FFFFFF;
+    --ring: #176B87;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* High-Contrast Large Touch Target Rules for Wet/Outdoor Hands */
+  button, a, input, select {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Sunlight-Readable Cards */
+  .marine-card {
+    background-color: #FFFFFF;
+    border: 1px solid #D8E5EB;
+    box-shadow: 0 2px 8px -2px rgba(11, 57, 84, 0.06);
+    border-radius: 14px;
+  }
+
+  .marine-card-elevated {
+    background-color: #FFFFFF;
+    border: 1.5px solid #C4D9E2;
+    box-shadow: 0 6px 16px -4px rgba(11, 57, 84, 0.09);
+    border-radius: 16px;
+  }
+
+  .marine-card-hero {
+    background: linear-gradient(135deg, #0B3954 0%, #176B87 100%);
+    color: #FFFFFF;
+    box-shadow: 0 8px 24px -4px rgba(11, 57, 84, 0.22);
+    border-radius: 18px;
+  }
+
+  /* Outdoor Large Touch Targets (Minimum 48px height) */
+  .touch-btn {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    border-radius: 12px;
+    transition: all 0.15s ease-in-out;
+  }
+
+  .touch-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* Safe State Banner */
+  .status-badge-safe {
+    background-color: #E8F7F0;
+    color: #16865B;
+    border: 1px solid #A6E2C6;
+  }
+
+  /* Warning State Banner */
+  .status-badge-warning {
+    background-color: #FEF6E8;
+    color: #D99116;
+    border: 1px solid #F8DAA5;
+  }
+
+  /* Danger / Emergency State Banner */
+  .status-badge-danger {
+    background-color: #FDF0EE;
+    color: #C0392B;
+    border: 1px solid #F5B8B1;
+  }
+
+  /* Subtle water pattern */
+  .bg-marine-soft {
+    background-color: #F4F9FB;
+  }
+}
+
+/* Custom Clean Scrollbar for Mobile / Desktop */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F9FB;
+}
+::-webkit-scrollbar-thumb {
+  background: #C4D9E2;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #176B87;
+}
+
+/* Leaflet Container Styled for Outdoor Marine High Contrast */
+.leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  background: #EAF4F7 !important;
+  font-family: var(--font-sans) !important;
+  z-index: 1;
+}
+
+.marine-popup .leaflet-popup-content-wrapper {
+  background: #FFFFFF !important;
+  color: #173042 !important;
+  border: 1.5px solid #176B87 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(11, 57, 84, 0.15) !important;
+  padding: 0 !important;
+}
+
+.marine-popup .leaflet-popup-content {
+  margin: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.marine-popup .leaflet-popup-tip {
+  background: #FFFFFF !important;
+  border: 1.5px solid #176B87 !important;
+}
+
+.marine-popup a.leaflet-popup-close-button {
+  color: #5B7282 !important;
+  padding: 6px !important;
+}

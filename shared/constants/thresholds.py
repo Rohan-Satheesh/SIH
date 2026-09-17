@@ -1,0 +1,12 @@
+"""
+Operational marine safety thresholds for coastal fishing vessels.
+"""
+
+MAX_SAFE_WAVE_HEIGHT_M = 1.8
+MAX_CAUTION_WAVE_HEIGHT_M = 2.5
+
+MAX_SAFE_WIND_SPEED_KMH = 35.0
+MAX_CAUTION_WIND_SPEED_KMH = 45.0
+
+EEZ_BUFFER_WARNING_NM = 12.0
+PROXIMITY_ALERT_THRESHOLD_KM = 5.0

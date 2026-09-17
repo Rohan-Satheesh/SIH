@@ -1,0 +1,38 @@
+================================================================================
+NEERMITRA (നീർമിത്ര) - TECHNOLOGY STACK OVERVIEW
+================================================================================
+
+1. FRONTEND
+   - Core & Framework: React 19, TypeScript, Vite 8
+   - Styling & UI: Tailwind CSS v4, Framer Motion (Animations), Lucide React (Icons)
+   - Mapping & GIS: Leaflet, React-Leaflet, CARTO Dark Matter Basemap, OGL (WebGL)
+   - State Management & Navigation: Zustand, React Router DOM v7
+   - Data Visualization & Utilities: Recharts, Date-fns, clsx, tailwind-merge
+
+2. BACKEND
+   - Framework & Server: Python 3.10+, FastAPI, Uvicorn
+   - Data Validation: Pydantic v2 (Shared Schemas & API Contracts)
+   - ORM & DB Drivers: SQLAlchemy 2.0, GeoAlchemy2, psycopg2-binary
+   - Architecture: Modular REST Gateway with In-Memory Spatial Fallbacks
+
+3. DATABASE & GEOSPATIAL ENGINE
+   - Database: PostgreSQL with PostGIS Spatial Extension (EPSG:4326)
+   - Spatial Computation: GeoPandas, Shapely, Haversine & Vincenty Geodesic math
+   - Layers: 200 NM EEZ Boundaries, Marine Protected Areas (MPAs), SST Thermal Fronts, Chlorophyll Bio-plumes, Coastal Sectors
+
+4. AI, NLP & AGENT SWARM
+   - Swarm Architecture: Multi-Agent Orchestrator / LangGraph Pattern
+   - Specialized Sub-Agents: WeatherAgent, GeospatialAgent, SafetyGeofenceAgent, OceanTrendExplainerAgent
+   - LLM Engines: Google Gemini 2.5 Flash, Grok / Groq (OpenAI-compatible), Local Deterministic Fallback
+   - NLP & Multilingual: Custom Malayalam Unicode Detector (\u0D00-\u0D7F), Domain Intent Classifier, RAG Knowledge Retriever
+
+5. DATA PIPELINE & TELEMETRY
+   - Ingestion & Scraping: Requests, BeautifulSoup4, Pandas (INCOIS Ocean Telemetry & IMD Marine Weather Bulletins)
+   - External APIs: Open-Meteo Marine API, MarineTraffic AIS Transponder Feeds
+   - Scheduling: Automated cron tasks aligned with satellite passes (06:00 & 18:00 UTC)
+
+6. DEVOPS, TOOLING & RUNNER
+   - Containerization: Docker, Docker Compose
+   - Linting & Types: Oxlint, TypeScript (tsc)
+   - Runner: Unified multi-process Node.js preflight launcher (run_model.js / run.bat)
+================================================================================

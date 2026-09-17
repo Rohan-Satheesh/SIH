@@ -1,0 +1,20 @@
+Potential Fishing Zones (PFZ)
+
+PFZ stands for Potential Fishing Zone. Potential Fishing Zones are specific areas in the ocean where fish are likely to aggregate or be found in higher abundance.
+
+How PFZs are Identified:
+Potential Fishing Zones are identified by scientists using satellite ocean remote sensing data, including:
+1. Sea Surface Temperature (SST) gradients and ocean fronts, where cooler nutrient-rich water meets warmer water.
+2. Chlorophyll-a concentration, which indicates phytoplankton and micro-algae growth forming the base of the marine food chain.
+3. Ocean color and current convergence zones where small fish, baitfish, and pelagic species congregate.
+
+Advisory Nature and Practical Limitations:
+PFZ advisories are recommendations and scientific estimations, not a 100% guarantee of fish availability. Fish are living creatures influenced by depth, local currents, time of day, and lunar cycles. 
+
+Safety and Fishermen Guidelines:
+Fishermen should always combine PFZ advisory locations with:
+- Current weather, wind speed, and wave height conditions.
+- Vessel seaworthiness, engine capacity, and fuel range.
+- Official marine warnings from IMD, INCOIS, and Coast Guard.
+- Local traditional fishing knowledge.
+Never venture into distant PFZs if severe weather or high wave warnings are in effect.

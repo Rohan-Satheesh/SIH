@@ -1,0 +1,14 @@
+Potential Fishing Zones
+
+Potential Fishing Zones, or PFZs, are areas where fish
+may be more abundant.
+
+PFZ information can be estimated using ocean conditions
+such as sea surface temperature, chlorophyll concentration,
+ocean color, and ocean fronts.
+
+PFZ information is a recommendation and should not be
+treated as a guarantee of fish availability.
+
+Fishermen should combine PFZ information with local knowledge,
+weather conditions, boat capacity, and safety warnings.
