@@ -682,7 +682,10 @@ def run_marine_agent(
     elif isinstance(explainer_output, dict):
         final_text = explainer_output.get(
             "answer",
-            "",
+            explainer_output.get(
+                "text",
+                explainer_output.get("content", ""),
+            ),
         )
 
         conf_str = str(

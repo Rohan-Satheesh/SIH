@@ -1,5 +1,7 @@
 import logging
 import json
+import os
+import re
 from typing import Optional, Any
 
 from nlp.llm.groq_client import _call_groq_api
@@ -108,6 +110,16 @@ Only state a safety conclusion when an actual Safety Assessment is supplied.
 
 Do not say conditions are safe merely because wind or wave values appear low.
 
+For a SAFE Safety Assessment, use wording equivalent to:
+
+"Current conditions are assessed as SAFE based on the available weather and
+warning data. This assessment does not certify the suitability of any specific
+vessel."
+
+Keep the supplied weather, wave, and warning details, followed by practical
+advice to ensure the boat, equipment, and crew are prepared and to monitor
+local conditions.
+
 5. VESSEL SUITABILITY
 
 Never infer vessel-size suitability from weather or ocean conditions.
@@ -151,6 +163,13 @@ or
 "the queried location"
 
 and NOT as the user's physical current location.
+
+When reporting EEZ status for a selected or queried location, say:
+
+"The queried location is within India's 200 NM Exclusive Economic Zone (EEZ)."
+
+Do not say that the user is currently within the EEZ unless explicit device or
+GPS coordinates are supplied.
 
 7. REAL-TIME DATA
 
@@ -748,10 +767,15 @@ def explainer_agent(
         # ---------------------------------------------------------
 
         if "ocean" in relevant_data and (
-            "PFZ" in intent_upper
-            or "OCEAN" in intent_upper
-            or "FISHING_ZONE" in intent_upper
-            or "FISHING_ZONES" in intent_upper
+            intent_upper in {
+                "PFZ_QUERY",
+                "PFZ",
+                "FISHING_ZONE_QUERY",
+                "FISHING_ZONES_QUERY",
+                "FISHING_ZONE",
+                "FISHING_ZONES",
+                "FISHING_LOCATION_QUERY",
+            }
             or "PFZ" in str(query or "").upper()
             or "POTENTIAL FISHING ZONE" in str(query or "").upper()
             or "POTENTIAL FISHING ZONES" in str(query or "").upper()
@@ -859,9 +883,23 @@ Now answer the user.
         # Call Groq
         # ---------------------------------------------------------
 
-        response = _call_groq_api(prompt)
+        api_key = os.getenv("GROQ_API_KEY", "")
+        response = (
+            _call_groq_api(api_key, prompt)
+            if api_key
+            else None
+        )
 
         text = _clean_response(response)
+
+        if "geospatial" in relevant_data and text:
+            text = re.sub(
+                r"(?:\*\*)?(?:EEZ Status|You are currently within)(?::)?(?:\*\*)?:?\s*"
+                r"(?:Within |The location is within |You are currently within )?India's 200 NM Exclusive Economic Zone \(EEZ\)\.?",
+                "The queried location is within India's 200 NM Exclusive Economic Zone (EEZ).",
+                text,
+                flags=re.IGNORECASE,
+            )
 
         # ---------------------------------------------------------
         # Empty response protection

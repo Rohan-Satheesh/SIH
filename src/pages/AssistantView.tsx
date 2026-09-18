@@ -214,8 +214,8 @@ export function AssistantView() {
 
   const addAssistantMessage = (data: any) => {
     const replyText = data.text || (language === 'ML'
-      ? 'കൊച്ചി തീരത്ത് കടൽ തരംഗങ്ങൾ 1.2 മീറ്ററും കാറ്റ് 18 km/h ഉം ആണ്. സുരക്ഷിതമാണ്.'
-      : 'Kochi coastal waters report wave height of 1.2m and winds at 18 km/h. Sea conditions are safe for fishing.');
+      ? 'തത്സമയ സമുദ്ര വിവരങ്ങൾ ലഭ്യമല്ല.'
+      : 'Live marine intelligence is currently unavailable.');
 
     const risk = (data.risk || 'LOW').toUpperCase() as 'LOW' | 'MEDIUM' | 'HIGH';
     const agents = data.agents_invoked || [];
@@ -247,8 +247,8 @@ export function AssistantView() {
 
   const addFallbackMessage = () => {
     const fallbackText = language === 'ML'
-      ? 'നിലവിലെ കടൽ സൂചനകൾ: കൊച്ചി തീരത്ത് ശാന്തമായ കാലാവസ്ഥയാണ് (തിരമാല 1.1m, കാറ്റ് 16 km/h). കടലിൽ പോകുന്നത് സുരക്ഷിതമാണ്.'
-      : 'Current marine observation: Kochi coast is experiencing calm conditions (1.1m wave height, 16 km/h wind). Safe for marine navigation.';
+      ? 'തത്സമയ സമുദ്ര വിവരങ്ങൾ ലഭ്യമല്ല. വീണ്ടും ശ്രമിക്കുക.'
+      : 'Live marine intelligence is unavailable. Please try again.';
 
     setMessages(prev => [
       ...prev,
