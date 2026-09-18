@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 def _has_postgis_connection(engine) -> bool:
     if engine is None:
+        logger.error(
+            "PostGIS health check skipped: SQLAlchemy engine is None"
+        )
         return False
 
     try:
