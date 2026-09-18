@@ -29,6 +29,7 @@ The LLM is NOT responsible for numerical scoring.
 from __future__ import annotations
 
 import re
+import logging
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -51,6 +52,8 @@ SST_B2_PREFIX = "satellite/sst/copernicus/"
 CHLOROPHYLL_B2_PREFIX = "satellite/chlorophyll/"
 
 THERMAL_GRADIENT_THRESHOLD = 0.05
+
+logger = logging.getLogger("orca.ocean_agent")
 
 
 # ============================================================
@@ -308,12 +311,25 @@ def ocean_agent(
             )
 
             pfz_score = pfz_result.get("pfz_suitability_score")
+            pfz_classification = pfz_result.get("classification")
+            pfz_message = pfz_result.get("message")
+
+            logger.info(
+                "PFZ calculation chlorophyll_mg_m3=%s "
+                "thermal_front_detected=%s score=%s classification=%s",
+                chlorophyll_mg_m3,
+                thermal_front_detected,
+                pfz_score,
+                pfz_classification,
+            )
 
             return OceanReport(
-                sst_celsius=sst_celsius if sst_celsius is not None else 28.2,
-                chlorophyll_mg_m3=chlorophyll_mg_m3 if chlorophyll_mg_m3 is not None else 0.42,
+                sst_celsius=sst_celsius,
+                chlorophyll_mg_m3=chlorophyll_mg_m3,
                 thermal_front_detected=thermal_front_detected,
-                pfz_suitability_score=pfz_score if pfz_score is not None else 72.0,
+                pfz_suitability_score=pfz_score,
+                pfz_classification=pfz_classification,
+                pfz_message=pfz_message,
                 source_timestamps={
                     "sst": str(sst_result.get("timestamp", "")),
                     "chlorophyll": str(chlorophyll_result.get("timestamp", "")),
@@ -322,8 +338,6 @@ def ocean_agent(
             )
 
     except Exception as e:
-        import logging
-        logger = logging.getLogger("orca.ocean_agent")
         logger.error(f"Ocean agent failed to fetch data: {e}")
         # Fallback ocean telemetry: Strict NO-DATA fallback
         return OceanReport(

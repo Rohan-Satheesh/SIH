@@ -39,62 +39,50 @@ DEFAULT_AGENTS = ["weather_agent", "ocean_agent", "geospatial_agent"]
 
 
 def route_after_planner(state: AgentState) -> list[str]:
-    """
-    Conditional edge function called after the Planner node.
+    plan = state.get("plan") or {}
+    required = plan.get("required_agents") or []
 
-    Reads `state["plan"]["required_agents"]` and returns the list
-    of specialist node names to fan out to.
-
-    If plan is missing or empty, defaults to running ALL specialist agents
-    (fail-safe: always gather some data).
-
-    Returns:
-        List of node name strings for LangGraph to route to.
-    """
-    plan = state.get("plan")
-
-    if not plan or not plan.get("required_agents"):
-        # No plan or empty agent list — run all specialists
+    if not required:
         return DEFAULT_AGENTS
 
-    required = plan["required_agents"]
-    nodes = []
+    routes = []
 
-    for agent_key in required:
-        node_name = AGENT_KEY_TO_NODE.get(agent_key)
-        if node_name:
-            nodes.append(node_name)
+    for agent in required:
+        node = AGENT_KEY_TO_NODE.get(agent)
 
-    # Always include at least one agent
-    if not nodes:
-        return DEFAULT_AGENTS
+        if node and node in SPECIALIST_AGENTS:
+            routes.append(node)
 
-    return nodes
+    return routes or DEFAULT_AGENTS
 
 
-def should_run_safety(state: AgentState) -> Literal["safety_agent", "explainer"]:
-    """
-    After specialist agents complete, determine whether to run the
-    Safety Agent or skip directly to the Explainer.
+def should_run_safety(state: AgentState) -> str:
+    plan = state.get("plan") or {}
 
-    Safety agent runs if:
-    - The plan explicitly includes "safety" in required_agents, OR
-    - Weather data indicates potential hazards, OR
-    - We always run it (default safe behavior)
+    intent = str(plan.get("intent") or "").upper()
+    required = plan.get("required_agents") or []
 
-    In practice, we almost always run safety — it's the core value prop.
-    """
-    plan = state.get("plan")
+    if intent == "SAFETY_CHECK":
+        return "safety_agent"
 
-    # Check if safety was explicitly excluded
-    if plan and plan.get("required_agents"):
-        required = plan["required_agents"]
-        # Only skip safety for pure informational queries
-        if "safety" not in required and plan.get("intent") in ("TREND_ANALYSIS", "GENERAL_INFO", "KNOWLEDGE_QUERY"):
-            return "explainer"
+    if "safety" in required:
+        return "safety_agent"
 
-    # Default: always run safety agent
+    informational_intents = {
+        "PFZ_QUERY",
+        "OCEAN_QUERY",
+        "WEATHER_QUERY",
+        "BOUNDARY_CHECK",
+        "TREND_ANALYSIS",
+        "GENERAL_INFO",
+        "KNOWLEDGE_QUERY",
+    }
+
+    if intent in informational_intents:
+        return "explainer"
+
     return "safety_agent"
+
 
 
 def check_for_errors(state: AgentState) -> Literal["explainer", "error_handler"]:

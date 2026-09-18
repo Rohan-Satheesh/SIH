@@ -60,6 +60,7 @@ except ImportError:
 
         def invoke(self, state, config=None):
             curr_state = dict(state)
+
             # 1. Planner
             if "planner" in self.graph.nodes:
                 res = self.graph.nodes["planner"](curr_state)
@@ -68,17 +69,38 @@ except ImportError:
 
             # 2. Specialist fan-out
             plan = curr_state.get("plan", {})
-            req_agents = plan.get("required_agents", ["weather", "ocean", "geospatial"])
+            req_agents = plan.get(
+                "required_agents",
+                ["weather", "ocean", "geospatial"],
+            )
+
             for agent_name in req_agents:
-                node_key = f"{agent_name}_agent" if not agent_name.endswith("_agent") else agent_name
+                node_key = (
+                    f"{agent_name}_agent"
+                    if not agent_name.endswith("_agent")
+                    else agent_name
+                )
+
                 if node_key in self.graph.nodes:
                     res = self.graph.nodes[node_key](curr_state)
+
                     if isinstance(res, dict):
                         for k, v in res.items():
-                            if k == "completed_agents" and "completed_agents" in curr_state:
-                                curr_state["completed_agents"] = list(set(curr_state["completed_agents"] + v))
+                            if (
+                                k == "completed_agents"
+                                and "completed_agents" in curr_state
+                            ):
+                                curr_state["completed_agents"] = list(
+                                    set(
+                                        curr_state["completed_agents"] + v
+                                    )
+                                )
+
                             elif k == "error" and "error" in curr_state:
-                                curr_state["error"] = curr_state["error"] + v
+                                curr_state["error"] = (
+                                    curr_state["error"] + v
+                                )
+
                             else:
                                 curr_state[k] = v
 
@@ -87,39 +109,83 @@ except ImportError:
                 self.graph.nodes["specialist_join"](curr_state)
 
             # 4. Safety Agent
-            if "safety_agent" in self.graph.nodes:
+            safety_route = should_run_safety(curr_state)
+
+            if (
+                safety_route == "safety_agent"
+                and "safety_agent" in self.graph.nodes
+            ):
                 res = self.graph.nodes["safety_agent"](curr_state)
+
                 if isinstance(res, dict):
                     for k, v in res.items():
-                        if k == "completed_agents" and "completed_agents" in curr_state:
-                            curr_state["completed_agents"] = list(set(curr_state["completed_agents"] + v))
+                        if (
+                            k == "completed_agents"
+                            and "completed_agents" in curr_state
+                        ):
+                            curr_state["completed_agents"] = list(
+                                set(
+                                    curr_state["completed_agents"] + v
+                                )
+                            )
+
                         elif k == "error" and "error" in curr_state:
-                            curr_state["error"] = curr_state["error"] + v
+                            curr_state["error"] = (
+                                curr_state["error"] + v
+                            )
+
                         else:
                             curr_state[k] = v
 
             # 5. Explainer
             if "explainer" in self.graph.nodes:
                 res = self.graph.nodes["explainer"](curr_state)
+
                 if isinstance(res, dict):
                     for k, v in res.items():
-                        if k == "completed_agents" and "completed_agents" in curr_state:
-                            curr_state["completed_agents"] = list(set(curr_state["completed_agents"] + v))
+                        if (
+                            k == "completed_agents"
+                            and "completed_agents" in curr_state
+                        ):
+                            curr_state["completed_agents"] = list(
+                                set(
+                                    curr_state["completed_agents"] + v
+                                )
+                            )
+
                         elif k == "error" and "error" in curr_state:
-                            curr_state["error"] = curr_state["error"] + v
+                            curr_state["error"] = (
+                                curr_state["error"] + v
+                            )
+
                         else:
                             curr_state[k] = v
 
             return curr_state
 
-from agents.agents.explainer_agent import explainer_agent as run_explainer_agent
-from agents.agents.geospatial_agent import geospatial_agent as run_geospatial_agent
-from agents.agents.safety_agent import safety_agent as run_safety_agent
-from agents.agents.weather_agent import weather_agent as run_weather_agent
-from agents.agents.ocean_agent import ocean_agent as run_ocean_agent
-from agents.agents.knowledge_agent import knowledge_agent as run_knowledge_agent
+
+from agents.agents.explainer_agent import (
+    explainer_agent as run_explainer_agent
+)
+from agents.agents.geospatial_agent import (
+    geospatial_agent as run_geospatial_agent
+)
+from agents.agents.safety_agent import (
+    safety_agent as run_safety_agent
+)
+from agents.agents.weather_agent import (
+    weather_agent as run_weather_agent
+)
+from agents.agents.ocean_agent import (
+    ocean_agent as run_ocean_agent
+)
+from agents.agents.knowledge_agent import (
+    knowledge_agent as run_knowledge_agent
+)
+
 from agents.orchestrator.checkpointer import checkpointer
 from agents.orchestrator.state import AgentState
+
 from agents.orchestrator.router import (
     route_after_planner,
     should_run_safety,
@@ -127,10 +193,10 @@ from agents.orchestrator.router import (
 
 from agents.planner.planner import planner_node
 
+
 # ============================================================
 # Planner Mock
 # ============================================================
-
 
 
 # ============================================================
@@ -147,7 +213,9 @@ def weather_agent_node(state: AgentState):
 
     if not location or len(location) != 2:
         return {
-            "error": ["Weather Agent requires [latitude, longitude]."]
+            "error": [
+                "Weather Agent requires [latitude, longitude]."
+            ]
         }
 
     latitude = location[0]
@@ -176,7 +244,9 @@ def ocean_agent_node(state: AgentState) -> dict:
 
     if not location or len(location) != 2:
         return {
-            "error": ["Ocean Agent requires [latitude, longitude]."],
+            "error": [
+                "Ocean Agent requires [latitude, longitude]."
+            ],
             "completed_agents": ["ocean_agent"],
         }
 
@@ -206,7 +276,9 @@ def geospatial_agent_node(state: AgentState) -> dict:
 
     if not location or len(location) != 2:
         return {
-            "error": ["Geospatial Agent requires [latitude, longitude]."],
+            "error": [
+                "Geospatial Agent requires [latitude, longitude]."
+            ],
             "completed_agents": ["geospatial_agent"],
         }
 
@@ -233,10 +305,12 @@ def knowledge_agent_node(state: AgentState) -> dict:
 
     try:
         report = run_knowledge_agent(query)
+
         return {
             "knowledge_data": report,
             "completed_agents": ["knowledge_agent"],
         }
+
     except Exception as exc:
         return {
             "error": [f"Knowledge Agent failed: {exc}"],
@@ -304,6 +378,10 @@ def explainer_node(state: AgentState) -> dict:
     """
 
     try:
+        # Get the structured Planner output so the Explainer
+        # knows what kind of question the user actually asked.
+        plan = state.get("plan") or {}
+
         response = run_explainer_agent(
             query=state.get("query", ""),
             weather_data=state.get("weather_data"),
@@ -311,6 +389,11 @@ def explainer_node(state: AgentState) -> dict:
             geo_data=state.get("geo_data"),
             safety_data=state.get("safety_data"),
             knowledge_data=state.get("knowledge_data"),
+
+            # Planner context
+            intent=plan.get("intent"),
+            location=plan.get("location"),
+            date=plan.get("date"),
         )
 
         return {
@@ -507,6 +590,7 @@ orca_graph = build_graph()
 # ============================================================
 
 import logging
+
 from agents.memory.context_store import extract_target_location
 
 logger = logging.getLogger("orca.orchestrator")
@@ -522,12 +606,23 @@ def run_marine_agent(
 ) -> dict:
     """
     Bridge function executing the LangGraph multi-agent swarm.
-    Extracts user location, runs specialist agents, and constructs CopilotResponse dict.
+    Extracts user location, runs specialist agents, and constructs
+    CopilotResponse dict.
     """
-    lat, lon, loc_name = extract_target_location(query, session=None, context=context)
+
+    lat, lon, loc_name = extract_target_location(
+        query,
+        session=None,
+        context=context,
+    )
 
     vessel = "motorized_10m"
-    if context and isinstance(context, dict) and context.get("vessel_type"):
+
+    if (
+        context
+        and isinstance(context, dict)
+        and context.get("vessel_type")
+    ):
         vessel = context.get("vessel_type")
 
     initial_state: AgentState = {
@@ -542,13 +637,30 @@ def run_marine_agent(
     }
 
     try:
-        config = {"configurable": {"thread_id": session_id or "default"}}
-        final_state = orca_graph.invoke(initial_state, config=config)
+        config = {
+            "configurable": {
+                "thread_id": session_id or "default"
+            }
+        }
+
+        final_state = orca_graph.invoke(
+            initial_state,
+            config=config,
+        )
+
     except Exception as exc:
-        logger.error(f"LangGraph execution failed: {exc}")
+        logger.error(
+            f"LangGraph execution failed: {exc}"
+        )
+
         final_state = dict(initial_state)
+
         final_state["final_response"] = {
-            "answer": "I apologize, but I am currently unable to process your request due to an internal system error.",
+            "answer": (
+                "I apologize, but I am currently unable "
+                "to process your request due to an internal "
+                "system error."
+            ),
             "intent": "UNKNOWN",
             "conditions": [],
             "confidence": "low",
@@ -556,87 +668,268 @@ def run_marine_agent(
             "data_available": False,
         }
 
-    explainer_output = final_state.get("final_response") or {}
+    explainer_output = (
+        final_state.get("final_response") or {}
+    )
 
     final_text = ""
     confidence = 95
     sources = []
-    
+
     if isinstance(explainer_output, str):
         final_text = explainer_output
-    elif isinstance(explainer_output, dict):
-        final_text = explainer_output.get("answer", "")
-        conf_str = str(explainer_output.get("confidence", "high")).lower()
-        confidence = 95 if conf_str == "high" else (70 if conf_str == "medium" else 40)
-        sources = explainer_output.get("sources", [])
 
-    weather_data = final_state.get("weather_data")
-    ocean_data = final_state.get("ocean_data")
-    safety_data = final_state.get("safety_data")
-    geo_data = final_state.get("geo_data")
-    completed = final_state.get("completed_agents") or []
+    elif isinstance(explainer_output, dict):
+        final_text = explainer_output.get(
+            "answer",
+            "",
+        )
+
+        conf_str = str(
+            explainer_output.get(
+                "confidence",
+                "high",
+            )
+        ).lower()
+
+        confidence = (
+            95
+            if conf_str == "high"
+            else (
+                70
+                if conf_str == "medium"
+                else 40
+            )
+        )
+
+        sources = explainer_output.get(
+            "sources",
+            [],
+        )
+
+    weather_data = final_state.get(
+        "weather_data"
+    )
+
+    ocean_data = final_state.get(
+        "ocean_data"
+    )
+
+    safety_data = final_state.get(
+        "safety_data"
+    )
+
+    geo_data = final_state.get(
+        "geo_data"
+    )
+
+    completed = (
+        final_state.get("completed_agents")
+        or []
+    )
 
     # Run friend's NLP translation on the final response!
     try:
-        from nlp.translation.translator import translate_response
-        lang_code = language.lower() if language else "en"
-        final_text = translate_response(final_text, lang_code)
+        from nlp.translation.translator import (
+            translate_response
+        )
+
+        lang_code = (
+            language.lower()
+            if language
+            else "en"
+        )
+
+        final_text = translate_response(
+            final_text,
+            lang_code,
+        )
+
     except Exception as e:
-        logger.error(f"NLP Translation failed: {e}")
+        logger.error(
+            f"NLP Translation failed: {e}"
+        )
 
     # Build telemetry conditions
     conditions: list[str] = []
-    
-    if isinstance(explainer_output, dict) and explainer_output.get("conditions"):
-        for c in explainer_output.get("conditions", []):
-            conditions.append(f"{c.get('parameter', '')}: {c.get('value', '')} ({c.get('interpretation', '')})")
+
+    if (
+        isinstance(explainer_output, dict)
+        and explainer_output.get("conditions")
+    ):
+        for c in explainer_output.get(
+            "conditions",
+            [],
+        ):
+            conditions.append(
+                f"{c.get('parameter', '')}: "
+                f"{c.get('value', '')} "
+                f"({c.get('interpretation', '')})"
+            )
+
     else:
         if weather_data:
-            if weather_data.wave_height_m is not None:
-                conditions.append(f"Wave Height: {weather_data.wave_height_m:.1f} m")
-            if weather_data.wind_speed_knots is not None:
-                dir_str = f" ({weather_data.wind_direction}°)" if weather_data.wind_direction else ""
-                conditions.append(f"Wind Speed: {weather_data.wind_speed_knots:.1f} kts{dir_str}")
+            if (
+                weather_data.wave_height_m
+                is not None
+            ):
+                conditions.append(
+                    f"Wave Height: "
+                    f"{weather_data.wave_height_m:.1f} m"
+                )
+
+            if (
+                weather_data.wind_speed_knots
+                is not None
+            ):
+                dir_str = (
+                    f" ({weather_data.wind_direction}°)"
+                    if weather_data.wind_direction
+                    else ""
+                )
+
+                conditions.append(
+                    f"Wind Speed: "
+                    f"{weather_data.wind_speed_knots:.1f} "
+                    f"kts{dir_str}"
+                )
+
             if weather_data.imd_warning_active:
-                conditions.append("IMD Advisory: ACTIVE")
+                conditions.append(
+                    "IMD Advisory: ACTIVE"
+                )
+
         if ocean_data:
-            if ocean_data.sst_celsius is not None:
-                conditions.append(f"SST: {ocean_data.sst_celsius:.1f} °C")
-            if ocean_data.chlorophyll_mg_m3 is not None:
-                conditions.append(f"Chlorophyll: {ocean_data.chlorophyll_mg_m3:.2f} mg/m³")
-            if ocean_data.pfz_suitability_score is not None:
-                conditions.append(f"PFZ Suitability: {ocean_data.pfz_suitability_score:.0f}/100")
+            if (
+                ocean_data.sst_celsius
+                is not None
+            ):
+                conditions.append(
+                    f"SST: "
+                    f"{ocean_data.sst_celsius:.1f} °C"
+                )
+
+            if (
+                ocean_data.chlorophyll_mg_m3
+                is not None
+            ):
+                conditions.append(
+                    f"Chlorophyll: "
+                    f"{ocean_data.chlorophyll_mg_m3:.2f} "
+                    f"mg/m³"
+                )
+
+            if (
+                ocean_data.pfz_suitability_score
+                is not None
+            ):
+                if ocean_data.pfz_suitability_score is not None:
+                    pfz_score = ocean_data.pfz_suitability_score * 100
+
+                    pfz_text = f"PFZ Suitability: {pfz_score:.0f}/100"
+
+                    if ocean_data.pfz_classification:
+                        pfz_text += f" ({ocean_data.pfz_classification})"
+
+                    conditions.append(pfz_text)
 
     # Determine risk level
+    #
+    # Only Safety/Weather queries should drive the global risk badge.
+    # Geospatial/PFZ/informational queries should not inherit a
+    # safety-agent risk value merely because the agent was invoked.
+
+    plan_intent = str(
+        (final_state.get("plan") or {}).get("intent") or ""
+    ).upper()
+
     risk_level = "LOW"
-    if safety_data:
-        lvl = getattr(safety_data, "safety_level", None) or getattr(safety_data, "safety_decision", None) or ""
-        lvl_str = str(lvl).upper()
-        if "DANGER" in lvl_str or "NO-GO" in lvl_str or "HIGH" in lvl_str:
+
+    if plan_intent in {
+        "SAFETY_CHECK",
+        "WEATHER_QUERY",
+    }:
+        if safety_data:
+            lvl = (
+                getattr(safety_data, "safety_level", None)
+                or getattr(safety_data, "safety_decision", None)
+                or ""
+            )
+
+            lvl_str = str(lvl).upper()
+
+            if (
+                "DANGER" in lvl_str
+                or "NO-GO" in lvl_str
+                or "HIGH" in lvl_str
+            ):
+                risk_level = "HIGH"
+
+            elif (
+                "CAUTION" in lvl_str
+                or "MODERATE" in lvl_str
+                or (
+                    hasattr(safety_data, "composite_risk_score")
+                    and safety_data.composite_risk_score is not None
+                    and safety_data.composite_risk_score >= 0.36
+                )
+            ):
+                risk_level = "MODERATE"
+
+        elif (
+            weather_data
+            and getattr(weather_data, "weather_risk_level", None)
+            == "DANGER"
+        ):
             risk_level = "HIGH"
-        elif "CAUTION" in lvl_str or "MODERATE" in lvl_str or (hasattr(safety_data, "composite_risk_score") and safety_data.composite_risk_score >= 0.36):
-            risk_level = "MODERATE"
-        else:
-            risk_level = "LOW"
-    elif weather_data and weather_data.weather_risk_level == "DANGER":
-        risk_level = "HIGH"
 
     spatial_payload = {
         "location_name": loc_name,
-        "coordinates": {"lat": lat, "lon": lon},
+        "coordinates": {
+            "lat": lat,
+            "lon": lon,
+        },
     }
-    
-    if isinstance(explainer_output, dict):
-        spatial_payload["explainer_data"] = explainer_output
+
+    if isinstance(
+        explainer_output,
+        dict,
+    ):
+        spatial_payload[
+            "explainer_data"
+        ] = explainer_output
+
         if sources:
-            spatial_payload["rag_evidence"] = {"sources": sources, "chunks": []}
-            
+            spatial_payload[
+                "rag_evidence"
+            ] = {
+                "sources": sources,
+                "chunks": [],
+            }
+
     if geo_data:
-        spatial_payload["boundaries"] = geo_data.model_dump() if hasattr(geo_data, "model_dump") else str(geo_data)
+        spatial_payload[
+            "boundaries"
+        ] = (
+            geo_data.model_dump()
+            if hasattr(
+                geo_data,
+                "model_dump",
+            )
+            else str(geo_data)
+        )
 
     suggested = [
-        f"Check wave forecast for {loc_name}" if loc_name else "Check marine weather",
-        f"Nearest PFZ hotspots near {loc_name}" if loc_name else "Find potential fishing zones",
+        (
+            f"Check wave forecast for {loc_name}"
+            if loc_name
+            else "Check marine weather"
+        ),
+        (
+            f"Nearest PFZ hotspots near {loc_name}"
+            if loc_name
+            else "Find potential fishing zones"
+        ),
         "Safety advisory for next 24h",
     ]
 
@@ -646,7 +939,15 @@ def run_marine_agent(
         "location": loc_name,
         "conditions": conditions,
         "risk": risk_level,
-        "agents_invoked": list(set(completed)) if completed else ["WeatherAgent", "SafetyAgent", "ExplainerAgent"],
+        "agents_invoked": (
+            list(set(completed))
+            if completed
+            else [
+                "WeatherAgent",
+                "SafetyAgent",
+                "ExplainerAgent",
+            ]
+        ),
         "spatial_payload": spatial_payload,
         "suggested_actions": suggested,
     }

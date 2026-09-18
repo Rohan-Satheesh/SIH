@@ -42,7 +42,17 @@ class OceanReport(BaseModel):
     thermal_front_detected: bool = Field(False, description="Whether a thermal front was detected nearby")
     pfz_suitability_score: Optional[float] = Field(
         None,
-        description="PFZ suitability score (0.0 to 1.0) — high chl + SST gradient = high score"
+        description="PFZ suitability score from 0.0 to 1.0"
+    )
+    
+    pfz_classification: Optional[str] = Field(
+        None,
+        description="PFZ classification explicitly produced by the PFZ suitability model"
+    )
+
+    pfz_message: Optional[str] = Field(
+        None,
+        description="PFZ suitability advisory message"
     )
     nearest_pfz_bearing: Optional[str] = Field(None, description="Compass bearing to nearest PFZ")
     nearest_pfz_distance_nmi: Optional[float] = Field(None, description="Distance to nearest PFZ in NMI")

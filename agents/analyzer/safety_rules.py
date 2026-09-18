@@ -24,21 +24,40 @@ def evaluate_imd_warnings(imd_warning_active: bool, text: Optional[str]) -> Tupl
         return ("DANGER", [f"Active IMD Warning: {text or 'Severe weather'}"])
     return ("SAFE", [])
 
-def determine_vessel_suitability(vessel_type: Optional[str], safety_level: str) -> List[VesselSuitability]:
+def determine_vessel_suitability(
+    vessel_type: Optional[str],
+    safety_level: str
+) -> List[VesselSuitability]:
     if not vessel_type:
         return []
-    
+
     if safety_level == "DANGER":
         status = "UNSAFE"
-        rec = "Do not operate this vessel under the current conditions."
-    elif safety_level == "CAUTION" or safety_level == "UNKNOWN":
+        rec = (
+            "Do not operate this vessel under the current conditions."
+        )
+    elif safety_level in ("CAUTION", "UNKNOWN"):
         status = "CAUTION"
-        rec = "Operate only with appropriate precautions. Live data may be incomplete."
+        rec = (
+            "Conditions require appropriate precautions. "
+            "Live marine data may be incomplete."
+        )
     else:
         status = "SUITABLE"
-        rec = "Conditions are currently suitable for operation."
-        
-    return [VesselSuitability(vessel_type=vessel_type, status=status, recommendation=rec)]
+        rec = (
+            "No weather-related safety hazard was detected by the "
+            "current assessment. This does not certify vessel suitability; "
+            "vessel operation also depends on vessel condition, equipment, "
+            "crew, and operating requirements."
+        )
+
+    return [
+        VesselSuitability(
+            vessel_type=vessel_type,
+            status=status,
+            recommendation=rec,
+        )
+    ]
 
 def calculate_composite_safety(
     weather_data: Optional[WeatherReport],

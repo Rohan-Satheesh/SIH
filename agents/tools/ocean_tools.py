@@ -6,6 +6,7 @@ from typing import Any
 
 import numpy as np
 import requests
+import xarray as xr
 try:
     from langchain_core.tools import tool
 except ImportError:
@@ -75,7 +76,7 @@ def get_sst_data(
         }
 
     try:
-        with xr.open_dataset(path, engine="h5netcdf") as ds:
+        with xr.open_dataset(path, engine="netcdf4") as ds:
 
             # -------------------------------------------------
             # Find SST variable
@@ -282,7 +283,7 @@ def get_chlorophyll_data(
     try:
         with xr.open_dataset(
             path,
-            engine="h5netcdf",
+            engine="netcdf4",
         ) as ds:
 
             # -------------------------------------------------
@@ -480,7 +481,7 @@ def detect_thermal_front(
     try:
         with xr.open_dataset(
             path,
-            engine="h5netcdf",
+            engine="netcdf4",
         ) as ds:
 
             # -------------------------------------------------
