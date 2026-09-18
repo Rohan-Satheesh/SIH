@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter
 from datetime import datetime, timezone
 from sqlalchemy import text
@@ -6,6 +8,7 @@ from geo.layers.layer_manager import get_all_available_layers
 from server.src.config.settings import MARINETRAFFIC_API_KEY
 
 router = APIRouter(tags=["Health & Status"])
+logger = logging.getLogger(__name__)
 
 
 def _has_postgis_connection(engine) -> bool:
@@ -27,6 +30,7 @@ def _has_postgis_connection(engine) -> bool:
             )
             return bool(result.scalar())
     except Exception:
+        logger.exception("PostGIS health check failed")
         return False
 
 @router.get("/")
