@@ -1,0 +1,168 @@
+=== NEERMITRA NLP PIPELINE TEST LOGS ===
+
+--- QUERY ---
+Text: Is it safe to go fishing near Mumbai?
+Language: en
+
+--- RESPONSE ---
+Text: **Safety Assessment for Fishing Near Mumbai (as of the latest data)**  
+
+| Parameter | Current Value | What it Means for You |
+|-----------|---------------|-----------------------|
+| **Safety Level** | **SAFE** (composite risk score 0.0) | No hazards reported; conditions are suitable for a small motorized boat (≈10 m). |
+| **Wind** | 11.9 knots from 251° | Light‑moderate wind – easy to handle, no need for special reefing. |
+| **Wave Height** | 1.4 m | Small, manageable seas; comfortable for most coastal vessels. |
+| **Weather Risk** | SAFE (no IMD warning) | No storms, heavy rain, or extreme heat alerts. |
+| **Sea‑Surface Temperature** | 28.2 °C | Warm water, typical for the season – good for many tropical species. |
+| **Chlorophyll** | 0.42 mg m⁻³ | Indicates moderate primary productivity; fish are likely present. |
+| **PFZ Suitability Score** | 72 / 100 | A fairly good potential fishing zone (PFZ) – remember it’s an advisory, not a guarantee. |
+| **Geographical Status** | Inside Indian EEZ, not in an MPA or restricted area; no fishing ban active | Legally allowed to fish in these waters. |
+| **Vessel Suitability** | SUITABLE for a motorized 10 m boat | Your typical coastal craft is fine under current conditions. |
+
+### Bottom‑line Recommendation
+- **Yes, it is safe to go fishing near Mumbai right now.**  
+- The sea state (wind ≈ 12 knots, waves ≈ 1.4 m) is calm enough for a 10 m motorized boat.  
+- No weather warnings, no legal restrictions, and the safety system rates the environment as “SAFE.”  
+
+### Practical Tips
+1. **Check a fresh forecast** before you depart—conditions can change quickly, especially with local squalls.  
+2. Keep an eye on **wind direction (west‑southwest)**; it may affect your heading and drift.  
+3. Since the PFZ score is decent (72), you may have a good catch, but **target areas with higher chlorophyll** if you can navigate there.  
+4. Carry **basic safety gear** (life jackets, VHF radio, flares) even when conditions are safe.  
+5. Monitor **tide information** locally; the data we have doesn’t include tide levels.  
+
+Stay safe, have a good trip, and may the catch be plentiful!
+Risk: LOW
+Agents Invoked: ocean_agent, safety_agent, weather_agent, geospatial_agent, explainer
+Conditions: ['wind_speed: 11.93 knots ()', 'wave_height: 1.4 m ()', 'sst: 28.2 °C ()']
+
+========================================
+
+--- QUERY ---
+Text: Where is the nearest PFZ in Kochi?
+Language: en
+
+--- RESPONSE ---
+Text: **नमस्ते!**  
+
+आपने पूछा — **कोच्ची के पास सबसे नज़दीकी संभावित मछली पकड़ने वाला क्षेत्र (PFZ) कहाँ है?**  
+
+दुर्भाग्य से, इस बार हमारे सिस्टम में **nearest_pfz_bearing** और **nearest_pfz_distance_nmi** की जानकारी उपलब्ध नहीं है, इसलिए मैं आपको सटीक दिशा या दूरी नहीं बता पा रहा हूँ।  
+
+फिर भी, उपलब्ध डेटा से कुछ उपयोगी बातें बताता हूँ:
+
+| पैरामीटर | मान | क्या मतलब है |
+|----------|------|--------------|
+| **समुद्र सतह तापमान (SST)** | 28.2 °C | कई तटीय मछलियों के लिए अनुकूल |
+| **क्लोरोफिल** | 0.42 mg / m³ | फ़ीडिंग लेयर सक्रिय, संभावित मछली‑भोजन उपलब्ध |
+| **PFZ उपयुक्तता स्कोर** | **72 / 100** | कुल मिलाकर अच्छा – इस क्षेत्र में मछली पकड़ने की संभावना मध्यम‑उच्च है |
+| **हवा** | 9.7 knots, दिशा 316° | हल्की‑मध्यम हवा, नौकायन के लिये सुरक्षित |
+| **लहरें** | 1.3 m | शांत‑से‑मध्यम, नाव चलाने में कोई बड़ी समस्या नहीं |
+| **सुरक्षा स्तर** | SAFE | कोई तत्काल खतरा नहीं, लेकिन हमेशा मौसम‑अपडेट देखते रहें |
+
+### क्या करें?
+1. **स्थानीय PFZ मानचित्र/एडवाइज़र देखें** – कोच्ची के तटीय विभाग या राज्य मत्स्य विभाग की वेबसाइट पर अक्सर अपडेटेड PFZ मानचित्र मिलते हैं।  
+2. **समुद्र‑सुरक्षा रडार/एप्लिकेशन** – “MarineTraffic”, “Windy” या राज्य के आधिकारिक फ़िशिंग ऐप से रीयल‑टाइम PFZ संकेत मिल सकते हैं।  
+3. **समुद्र‑पर्यवेक्षण बिंदु** – कोच्ची बंदरगाह के पास कई मछली‑भोजन‑स्रोत (जैसे एग्रो‑प्लैंकटन) होते हैं; उन क्षेत्रों में थोड़ा‑बहुत घूमना अक्सर फायदेमंद रहता है।  
+4. **सुरक्षा** – वर्तमान में हवा ≈ 10 knots और लहर ≈ 1.3 m हैं, इसलिए नाव चलाना सुरक्षित है, परन्तु  
+   - मौसम अपडेट हर 3‑6 घंटे पर देखें,  
+   - तेज़ हवाओं या अचानक लहरों के लिए तैयार रहें,  
+   - हमेशा लाइफ़ जैकेट और आपातकालीन रेडियो रखें।  
+
+### संक्षेप में
+- **PFZ की सटीक दिशा/दूरी अभी उपलब्ध नहीं है**, लेकिन जल‑तापमान, क्लोरोफिल और 72 % उपयुक्तता स्कोर से यह संकेत मिलता है कि आपके आसपास का समुद्र मछली पकड़ने के लिये अच्छा है।  
+- **स्थानीय मत्स्य विभाग या आधिकारिक फ़िशिंग ऐप** से नवीनतम PFZ मानचित्र देखें; वह आपको सटीक बियरिंग और दूरी दे पाएगा।  
+
+यदि आप चाहें तो मैं आपको कोच्ची के प्रमुख मत्स्य विभाग के संपर्क विवरण या ऑनलाइन PFZ पोर्टल के लिंक भेज सकता हूँ। बताइए!  
+
+**सुरक्षित और सफल मछली पकड़ना!** 🎣
+Risk: LOW
+Agents Invoked: ocean_agent, safety_agent, weather_agent, geospatial_agent, explainer
+Conditions: ['wind_speed: 9.72 knots ()', 'wave_height: 1.3 m ()', 'sst: 28.2 °C ()']
+
+========================================
+
+--- QUERY ---
+Text: toofan ki chetawani hai kya?
+Language: hi
+
+--- RESPONSE ---
+Text: **नमस्ते!**  
+
+वर्तमान डेटा के अनुसार:
+
+- **इंडियन मौसम विभाग (IMD) की कोई चेतावनी सक्रिय नहीं है** (`imd_warning_active: False`)  
+- मौसम जोखिम स्तर **SAFE** है।  
+- हवा की गति ≈ 12 knots, लहर की ऊँचाई ≈ 1.4 m – दोनों ही सुरक्षित सीमा में हैं।  
+
+**तोफ़ान की कोई चेतावनी नहीं है**; आज का मौसम मछली पकड़ने के लिए उपयुक्त माना गया है। फिर भी, समुद्र में हमेशा सतर्क रहें:
+
+- मौसम में अचानक बदलाव हो सकता है, इसलिए नियमित रूप से अपडेट चेक करते रहें।  
+- यदि लहरें या हवा तेज़ हो जाएँ, तो तुरंत सुरक्षित स्थान पर लौटें।  
+
+सुरक्षित यात्रा और शुभ मछली पकड़ना! 🚤🐟
+Risk: LOW
+Agents Invoked: ocean_agent, safety_agent, weather_agent, geospatial_agent, explainer
+Conditions: ['wind_speed: 11.93 knots ()', 'wave_height: 1.4 m ()', 'sst: 28.2 °C ()']
+
+========================================
+
+--- QUERY ---
+Text: kadal kshobham undo
+Language: ml
+
+--- RESPONSE ---
+Text: **കദൽ സ്ഥിതി (Sea Condition) – ഇന്ന് സുരക്ഷിതം**  
+
+- **കാറ്റ്:** ≈ 12 knots, ദിശ 251° (പശ്ചിമ‑ദക്ഷിണ‑പശ്ചിമം).  
+- **അലകൾ:** ഉയരം ≈ 1.4 മീറ്റർ – മിതമായ, കൈകാര്യം ചെയ്യാൻ എളുപ്പം.  
+- **വെള്ളത്തിന്റെ താപനില:** 28.2 °C – പല തരം മത്സ്യങ്ങൾക്ക് അനുയോജ്യം.  
+- **ക്ലോറോഫിൽ:** 0.42 mg/m³ – മിതമായ ഉൽപ്പാദനക്ഷമത, ഭക്ഷ്യ ശൃംഖല സജീവം.  
+- **പിഎഫ്‌ജെ (മത്സ്യബന്ധന സാധ്യതാ മേഖല) സ്കോർ:** 72 / 100 – മത്സ്യബന്ധനത്തിന് നല്ല സാധ്യതയുള്ള പ്രദേശം.  
+
+**സുരക്ഷാ നില:**  
+- എല്ലാ ഏജന്റുകളും “SAFE” എന്ന് റിപ്പോർട്ട് ചെയ്യുന്നു.  
+- നിങ്ങളുടെ 10 മീറ്റർ മോട്ടോർബോട്ട് “SUITABLE” ആയി വിലയിരുത്തപ്പെട്ടിട്ടുണ്ട്.  
+- നിലവിൽ **ഇംഡി (IMD) മുന്നറിയിപ്പ് ഇല്ല**, മത്സ്യബന്ധന നിരോധനമോ MPA (Marine Protected Area) ലംഘനമോ ഇല്ല; നിങ്ങൾ ഇന്ത്യയുടെ 200 NM EEZ ഉള്ളിലാണ്.
+
+**പ്രായോഗിക ഉപദേശം**  
+- ഈ സാഹചര്യത്തിൽ പുറപ്പെടാൻ സുരക്ഷിതമാണ്; പക്ഷേ കാറ്റിന്റെ ദിശയും അലയുടെ ഉയരവും ശ്രദ്ധിച്ച്, നിങ്ങളുടെ ജലപാതയിലേക്ക് (വേവ്) നേരിട്ട് വരാതിരിക്കാൻ ശ്രമിക്കുക.  
+- 28 °C താപനിലയും 0.42 mg/m³ ക്ലോറോഫിലും അടിസ്ഥാനമാക്കി, ചുവന്ന തിലപ്പൊക്ക (മാകറൽ), സാൽമൺ, തിലപ്പൊക്ക (പെറോ) തുടങ്ങിയവയുടെ സാന്നിധ്യം ഉയർന്നിരിക്കാം.  
+- PFZ സ്കോർ 72 ആണ്, പക്ഷേ ഇത് *ശാസ്ത്രീയ ഉപദേശം* മാത്രമാണ്; മത്സ്യത്തിന്റെ സാന്നിധ്യം ഉറപ്പില്ല. അതിനാൽ, നിങ്ങളുടെ സാധാരണ ലക്ഷ്യപ്രദേശങ്ങളിലോ, അടുത്തുള്ള ചാർട്ടുകൾ പരിശോധിച്ച്, സജീവമായ മീൻപിടിത്തം കാണുന്നിടങ്ങളിലേക്ക് നീങ്ങുക.  
+
+**അവസാനത്തിൽ** – ഇന്ന് കടലിൽ പോകാൻ സുരക്ഷിതം, പക്ഷേ സാധാരണ സുരക്ഷാ നടപടികൾ (ജീവൻ ജാക്കറ്റ്, റേഡിയോ, കാലാവസ്ഥാ അപ്ഡേറ്റുകൾ) പാലിക്കുക. നല്ല മത്സ്യപിടിത്തം ആശംസിക്കുന്നു!
+Risk: LOW
+Agents Invoked: ocean_agent, safety_agent, weather_agent, geospatial_agent, explainer
+Conditions: ['wind_speed: 11.93 knots ()', 'wave_height: 1.4 m ()', 'sst: 28.2 °C ()']
+
+========================================
+
+--- QUERY ---
+Text: What is SST?
+Language: en
+
+--- RESPONSE ---
+Text: **Sea Surface Temperature (SST)** is the temperature of the top layer of the ocean, usually the upper few centimeters. It’s measured in degrees Celsius (or Fahrenheit) and is a key indicator of marine conditions.
+
+### Why SST matters to you
+- **Fish behavior:** Many fish species are temperature‑sensitive. Certain temperatures attract specific schools, while others may cause them to move deeper or farther away.
+- **Potential Fishing Zones (PFZ):** Scientists use SST together with chlorophyll and other data to suggest where fish are likely to be feeding. A higher SST can indicate warmer water masses that may bring tropical species, whereas cooler SSTs might signal upwelling zones rich in nutrients.
+- **Safety & vessel performance:** Warmer surface water can affect engine cooling and fuel efficiency, while rapid temperature changes may signal fronts or currents that could affect boat handling.
+
+### What the data says right now
+- **Current SST at your location:** **28.2 °C** (as of the latest observation at 2026‑09‑17 21:01 UTC).
+- **Other ocean clues:** Chlorophyll is 0.42 mg m⁻³, and the PFZ suitability score is 72 / 100, indicating fairly good conditions for fishing, though no specific PFZ bearing or distance is flagged at the moment.
+- **Safety:** All safety indicators (wind, wave, overall risk) are marked **SAFE**, and your vessel type (10 m motorized) is deemed suitable for operation.
+
+### Practical take‑away for today
+- The warm surface temperature (28.2 °C) suggests that tropical or warm‑water species could be active near the surface. If you target species like pomfret, mackerel, or sardines, this is a favorable sign.
+- Keep an eye on any sudden changes in temperature or the appearance of a thermal front (none detected now) that could shift fish locations.
+- Conditions are safe for heading out, but always stay updated on any new weather warnings.
+
+If you need more detail—such as specific species that prefer this temperature range or advice on gear adjustments—just let me know!
+Risk: LOW
+Agents Invoked: ocean_agent, safety_agent, weather_agent, geospatial_agent, explainer
+Conditions: ['wind_speed: 11.93 knots ()', 'wave_height: 1.4 m ()', 'sst: 28.2 °C ()']
+
+========================================
+

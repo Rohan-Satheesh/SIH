@@ -6,7 +6,7 @@ Implements Task 5 of the Geospatial & Map Services Roadmap.
 from typing import Dict, Any, List, Tuple, Optional
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point
 import math
 
 from geo.services.boundary_service import check_point_boundaries, haversine_distance

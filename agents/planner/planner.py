@@ -12,323 +12,145 @@ Uses Gemini to:
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
-from dotenv import load_dotenv
-
 from agents.orchestrator.state import AgentState, PlannerOutput
+from shared.schemas.query_schema import QueryPlan, IntentType, AgentName
 
-
-# ============================================================
-# Configuration
-# ============================================================
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-
-_llm = None
-
-def get_planner_llm():
-    global _llm
-    if _llm is not None:
-        return _llm
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    if api_key:
-        try:
-            from langchain_google_genai import ChatGoogleGenerativeAI
-            _llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                google_api_key=api_key,
-                temperature=0,
-            )
-        except Exception:
-            _llm = None
-    return _llm
-
-
-# ============================================================
-# Planner Prompt
-# ============================================================
-
-PLANNER_SYSTEM_PROMPT = """
-You are the ORCA Marine Intelligence Planner.
-
-Your job is to analyze a user's marine-related request and create
-a structured execution plan for specialist AI agents.
-
-Available intents:
-
-1. SAFETY_CHECK
-   Questions about whether it is safe to travel, fish, sail,
-   or operate a vessel.
-
-2. PFZ_QUERY
-   Questions about potential fishing zones, fish abundance,
-   SST, chlorophyll, or ocean productivity.
-
-3. WEATHER_QUERY
-   Questions primarily about weather, wind, warnings, or waves.
-
-4. ROUTE_PLANNING
-   Questions about planning a marine route or choosing a safe route.
-
-5. BOUNDARY_CHECK
-   Questions about marine boundaries, restricted areas, EEZ,
-   fishing zones, or geofences.
-
-6. TREND_ANALYSIS
-   Questions asking about historical or future trends.
-
-Available specialist agents:
-
-- weather
-- ocean
-- geospatial
-- safety
-
-Agent selection rules:
-
-IMPORTANT:
-Never include "safety" in required_agents.
-Safety is always handled downstream by the LangGraph orchestrator
-after the specialist agents complete.
-
-SAFETY_CHECK:
-    weather + ocean + geospatial
-
-PFZ_QUERY:
-    ocean + geospatial
-
-WEATHER_QUERY:
-    weather
-
-ROUTE_PLANNING:
-    weather + geospatial
-
-BOUNDARY_CHECK:
-    geospatial
-
-TREND_ANALYSIS:
-    ocean + weather
-
-The planner must return ONLY valid JSON.
-
-JSON structure:
-
-{
-    "intent": "SAFETY_CHECK",
-    "required_agents": ["weather", "ocean", "geospatial", "safety"],
-    "subtasks": [
-        {
-            "agent": "weather",
-            "action": "get_weather",
-            "params": {}
-        }
-    ]
-}
-
-Do not invent specialist agent names.
-
-Keep the plan concise and directly related to the user request.
-"""
-
-
-# ============================================================
-# JSON Parsing
-# ============================================================
-
-
-def _parse_json_response(content: Any) -> dict:
-    """
-    Convert Gemini's response into a Python dictionary.
-    """
-
-    if isinstance(content, list):
-        content = "".join(
-            part.get("text", "")
-            if isinstance(part, dict)
-            else str(part)
-            for part in content
-        )
-
-    if not isinstance(content, str):
-        content = str(content)
-
-    content = content.strip()
-
-    # Handle accidental Markdown code fences.
-    if content.startswith("```"):
-        lines = content.splitlines()
-
-        if lines and lines[0].startswith("```"):
-            lines = lines[1:]
-
-        if lines and lines[-1].strip() == "```":
-            lines = lines[:-1]
-
-        content = "\n".join(lines).strip()
-
-        if content.lower().startswith("json"):
-            content = content[4:].strip()
-
-    return json.loads(content)
-
-
-# ============================================================
-# Validation
-# ============================================================
-
-
-VALID_INTENTS = {
-    "SAFETY_CHECK",
-    "PFZ_QUERY",
-    "WEATHER_QUERY",
-    "ROUTE_PLANNING",
-    "BOUNDARY_CHECK",
-    "TREND_ANALYSIS",
-}
-
-
-VALID_AGENTS = {
-    "weather",
-    "ocean",
-    "geospatial",
-    "safety",
-}
-
-
-def _validate_plan(plan: dict) -> PlannerOutput:
+def _validate_plan(plan: QueryPlan) -> PlannerOutput:
     """
     Validate and normalize the Planner output.
     """
-
-    intent = plan.get("intent")
-
-    if intent not in VALID_INTENTS:
-        raise ValueError(
-            f"Invalid planner intent: {intent}"
-        )
-
-    required_agents = plan.get("required_agents", [])
-
-    if not isinstance(required_agents, list):
-        raise ValueError(
-            "required_agents must be a list."
-        )
-
-    invalid_agents = set(required_agents) - VALID_AGENTS
-
-    if invalid_agents:
-        raise ValueError(
-            f"Invalid planner agents: {invalid_agents}"
-        )
-
-    subtasks = plan.get("subtasks", [])
-
-    if not isinstance(subtasks, list):
-        raise ValueError(
-            "subtasks must be a list."
-        )
+    
+    intent = plan.intent.value
+    required_agents = [agent.value for agent in plan.required_agents if agent.value != "safety"]
+    subtasks = [
+        {
+            "agent": st.agent.value,
+            "action": st.action,
+            "params": st.params
+        }
+        for st in plan.subtasks
+    ]
 
     return {
         "intent": intent,
+        "location": plan.location,
+        "date": plan.date,
         "required_agents": required_agents,
         "subtasks": subtasks,
+        "language": plan.language,
     }
+
 
 
 # ============================================================
 # Planner
 # ============================================================
 
+from nlp.llm.groq_client import _call_groq_api
+import json
 
-def _heuristic_plan(query: str, location: list[float] | None = None) -> PlannerOutput:
-    """Deterministic heuristic planning fallback when LLM is unavailable."""
-    q = query.lower()
-    
-    if any(k in q for k in ["safe", "venture", "sail", "risk", "hazard", "warning", "surakshit", "safety", "can i go", "trip"]):
-        intent = "SAFETY_CHECK"
-        required = ["weather", "ocean", "geospatial"]
-        subtasks = [
-            {"agent": "weather", "action": "get_weather", "params": {}},
-            {"agent": "ocean", "action": "get_ocean_conditions", "params": {}},
-            {"agent": "geospatial", "action": "check_boundaries", "params": {}},
-        ]
-    elif any(k in q for k in ["fish", "pfz", "machhli", "meen", "chlorophyll", "catch", "potential", "hotspot", "shoal"]):
-        intent = "PFZ_QUERY"
-        required = ["ocean", "geospatial"]
-        subtasks = [
-            {"agent": "ocean", "action": "get_pfz_suitability", "params": {}},
-            {"agent": "geospatial", "action": "get_nearest_pfz", "params": {}},
-        ]
-    elif any(k in q for k in ["wave", "wind", "weather", "tide", "swell", "cyclone", "storm", "barish", "hawa", "lehar", "forecast", "temp"]):
-        intent = "WEATHER_QUERY"
-        required = ["weather"]
-        subtasks = [
-            {"agent": "weather", "action": "get_weather", "params": {}},
-        ]
-    elif any(k in q for k in ["boundary", "border", "eez", "restricted", "sri lanka", "pakistan", "seema", "athirthi", "zone", "fence"]):
-        intent = "BOUNDARY_CHECK"
-        required = ["geospatial"]
-        subtasks = [
-            {"agent": "geospatial", "action": "check_boundaries", "params": {}},
-        ]
-    elif any(k in q for k in ["route", "waypoint", "path", "directions", "navigate", "bearing", "distance"]):
-        intent = "ROUTE_PLANNING"
-        required = ["weather", "geospatial"]
-        subtasks = [
-            {"agent": "weather", "action": "get_weather", "params": {}},
-            {"agent": "geospatial", "action": "plan_safe_route", "params": {}},
-        ]
-    else:
-        intent = "SAFETY_CHECK"
-        required = ["weather", "ocean", "geospatial"]
-        subtasks = [
-            {"agent": "weather", "action": "get_weather", "params": {}},
-            {"agent": "ocean", "action": "get_ocean_data", "params": {}},
-            {"agent": "geospatial", "action": "analyze_location", "params": {}},
-        ]
+PLANNER_PROMPT = """You are the ORCA Agent Swarm Planner.
+Your job is to analyze the user's query and output a JSON execution plan.
+Do NOT output anything other than raw valid JSON matching the schema below.
 
-    return {
-        "intent": intent,
-        "required_agents": required,
-        "subtasks": subtasks,
+Output JSON Schema:
+{
+  "intent": "SAFETY_CHECK" | "PFZ_QUERY" | "WEATHER_QUERY" | "ROUTE_PLANNING" | "BOUNDARY_CHECK" | "TREND_ANALYSIS" | "KNOWLEDGE_QUERY" | "UNKNOWN",
+  "location": "Extract location name if present, else null",
+  "required_agents": ["weather", "ocean", "geospatial", "knowledge"],
+  "subtasks": [
+    {
+      "agent": "weather" | "ocean" | "geospatial" | "knowledge",
+      "action": "Description of action",
+      "params": {}
     }
+  ]
+}
 
+Available Agents and their purposes:
+- weather: Fetches wind, waves, warnings, etc.
+- ocean: Fetches SST, chlorophyll, PFZ data.
+- geospatial: Checks boundaries, EEZ, IMBL, geofencing, route planning.
+- knowledge: Explains terms, queries guidelines.
+
+Always return valid JSON. Do not include markdown formatting (like ```json).
+"""
 
 def create_plan(state: AgentState) -> PlannerOutput:
     """
-    Generate a plan from the user's current AgentState.
+    Generate a plan from the user's current AgentState using Groq LLM.
     """
-
     query = state.get("query", "")
     location = state.get("location")
-    vessel_type = state.get("vessel_type")
-
-    llm_instance = get_planner_llm()
-    if llm_instance is not None:
+    
+    from shared.schemas.query_schema import Subtask
+    
+    # 1. Call Groq
+    api_key = __import__("os").getenv("GROQ_API_KEY")
+    if api_key:
         try:
-            context = {
-                "query": query,
-                "location": location,
-                "vessel_type": vessel_type,
-            }
-
-            prompt = (
-                PLANNER_SYSTEM_PROMPT
-                + "\n\nUSER REQUEST:\n"
-                + json.dumps(context, default=str)
+            res_text = _call_groq_api(
+                api_key=api_key,
+                prompt=f"User Query: {query}",
+                system_prompt=PLANNER_PROMPT,
+                response_format="json_object"
             )
+            
+            # 2. Parse JSON
+            if res_text:
+                plan_dict = json.loads(res_text)
+                
+                intent_val = plan_dict.get("intent", "SAFETY_CHECK")
+                try:
+                    intent_enum = IntentType(intent_val)
+                except Exception:
+                    intent_enum = IntentType.SAFETY_CHECK
+                    
+                req_agents = []
+                for ra in plan_dict.get("required_agents", []):
+                    try:
+                        req_agents.append(AgentName(ra))
+                    except Exception:
+                        pass
+                        
+                subtasks = []
+                for st in plan_dict.get("subtasks", []):
+                    try:
+                        subtasks.append(Subtask(
+                            agent=AgentName(st["agent"]),
+                            action=st["action"],
+                            params=st.get("params", {})
+                        ))
+                    except Exception:
+                        pass
+                        
+                plan_obj = QueryPlan(
+                    intent=intent_enum,
+                    location=location[0] if location and isinstance(location, list) else plan_dict.get("location"),
+                    date="Today",
+                    language=state.get("language", "en"),
+                    required_agents=req_agents,
+                    subtasks=subtasks
+                )
+                
+                return _validate_plan(plan_obj)
+        except Exception as e:
+            __import__("logging").getLogger("orca.planner").error(f"Planner LLM failed: {e}")
 
-            response = llm_instance.invoke(prompt)
-            plan = _parse_json_response(response.content)
-            return _validate_plan(plan)
-        except Exception:
-            pass
+    # Fallback to a basic safe plan
+    plan_obj = QueryPlan(
+        intent=IntentType.SAFETY_CHECK,
+        location=location[0] if location and isinstance(location, list) else None,
+        date="Today",
+        language="en",
+        required_agents=[AgentName.WEATHER, AgentName.OCEAN, AgentName.GEOSPATIAL],
+        subtasks=[]
+    )
+    return _validate_plan(plan_obj)
 
-    return _heuristic_plan(query, location)
+
 
 
 # ============================================================

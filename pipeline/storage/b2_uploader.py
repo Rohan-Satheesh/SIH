@@ -23,7 +23,6 @@ except ImportError:
 
 try:
     import boto3
-    from botocore.exceptions import ClientError
     HAS_BOTO3 = True
 except ImportError:
     HAS_BOTO3 = False

@@ -12,10 +12,14 @@ from server.src.middleware.cors import setup_cors_middleware
 from server.src.routes.health import router as health_router
 from server.src.routes.chat import router as chat_router
 from server.src.routes.map_data import router as map_router, spatial_router, ais_router
+from server.src.routes.nlp_health import router as nlp_health_router
+from server.src.routes.alerts import router as alerts_router
+from server.src.routes.data import router as data_router
+from server.src.routes.feedback import router as feedback_router
 
 app = FastAPI(
-    title="NeerMitra Modular API (orca/ architecture)",
-    description="Role 2 Backend Engineer API Gateway routing between AI Agents, Geospatial, and NLP",
+    title="ORCA Marine Intelligence Platform API",
+    description="Agentic AI backend for ocean weather, PFZ advisory, geospatial intelligence, and safety monitoring.",
     version="2.0.0"
 )
 
@@ -28,7 +32,12 @@ app.include_router(chat_router)
 app.include_router(map_router)
 app.include_router(spatial_router)
 app.include_router(ais_router)
+app.include_router(nlp_health_router)
+app.include_router(alerts_router)
+app.include_router(data_router)
+app.include_router(feedback_router)
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server.src.app:app", host="0.0.0.0", port=8000, reload=True)
+

@@ -40,7 +40,7 @@ from pipeline.config import DatabaseConfig
 # Try importing psycopg2
 try:
     import psycopg2
-    from psycopg2 import sql, extras
+    from psycopg2 import extras
     HAS_PSYCOPG2 = True
 except ImportError:
     HAS_PSYCOPG2 = False

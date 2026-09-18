@@ -1,0 +1,133 @@
+{
+  "date": "2026-09-17",
+  "fetched_at": "2026-09-17T18:50:37.218267+00:00",
+  "source": "IMD RSMCND Marine Bulletins + CAP RSS",
+  "overall_severity": "none",
+  "warnings": [
+    {
+      "name": "sea_area_bulletin",
+      "warning_type": "sea_area",
+      "label": "Sea Area Bulletin",
+      "source_url": "https://rsmcnewdelhi.imd.gov.in/sea-area-bulletin.php",
+      "bulletins": [],
+      "combined_text_preview": "",
+      "severity": "none",
+      "affected_areas": [],
+      "valid_until": null
+    },
+    {
+      "name": "coastal_weather_bulletin",
+      "warning_type": "coastal_weather",
+      "label": "Coastal Weather Bulletin",
+      "source_url": "https://rsmcnewdelhi.imd.gov.in/coastal-weather-bulletin.php",
+      "bulletins": [
+        {
+          "source_url": "https://rsmcnewdelhi.imd.gov.in/uploads/archive/49/49_ce0049_coastal.pdf",
+          "title": "Read More",
+          "text": ""
+        },
+        {
+          "source_url": "https://rsmcnewdelhi.imd.gov.in/uploads/archive/49/49_13153b_coastal.pdf",
+          "title": "Read More",
+          "text": ""
+        }
+      ],
+      "combined_text_preview": "",
+      "severity": "none",
+      "affected_areas": [],
+      "valid_until": null
+    },
+    {
+      "name": "port_warning",
+      "warning_type": "port_warning",
+      "label": "Port Warning",
+      "source_url": "https://rsmcnewdelhi.imd.gov.in/port-warning.php",
+      "bulletins": [],
+      "combined_text_preview": "",
+      "severity": "none",
+      "affected_areas": [],
+      "valid_until": null
+    },
+    {
+      "name": "fishermen_warning",
+      "warning_type": "fishermen_warning",
+      "label": "Fishermen Warning",
+      "source_url": "https://rsmcnewdelhi.imd.gov.in/fishermen-warning.php",
+      "bulletins": [
+        {
+          "source_url": "https://rsmcnewdelhi.imd.gov.in/uploads/archive/45/45_dab575_fishermen.pdf",
+          "title": "Read More",
+          "text": ""
+        },
+        {
+          "source_url": "https://rsmcnewdelhi.imd.gov.in/uploads/archive/45/45_0a54f4_fishermen.pdf",
+          "title": "Read More",
+          "text": ""
+        }
+      ],
+      "combined_text_preview": "",
+      "severity": "none",
+      "affected_areas": [],
+      "valid_until": null
+    }
+  ],
+  "cap_alerts": [
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Isolated extremely rainfall likely over Saurashtra and Kutch on 15th September.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Isolated extremely rainfall likely over Odisha on 10th September.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over East Madhya Pradesh.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over East Madhya Pradesh.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over East Madhya Pradesh.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over Jharkhand.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over Jharkhand.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    },
+    {
+      "title": "Heavy to very heavy with extremely heavy rainfall",
+      "description": "Heavy to Very heavy rainfall at few places and extremely Heavy Rainfall at isolated places very likely over Odisha and Chattisgarh.",
+      "link": "",
+      "published": "",
+      "category": "Met"
+    }
+  ],
+  "cap_alert_count": 8
+}

@@ -22,7 +22,6 @@ DEFAULT_CHUNK_OVERLAP = 50
 
 def format_document_context(
     document: dict,
-    document_number: int = 1,
 ) -> str:
     """
     Format one retrieved chunk into clean factual text for LLM/NLP synthesis.
@@ -111,7 +110,6 @@ def get_relevant_context(
         context_parts.append(
             format_document_context(
                 document=document,
-                document_number=index,
             )
         )
 

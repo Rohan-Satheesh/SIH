@@ -12,11 +12,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       devOptions: { enabled: true },
       manifest: {
-        name: 'NeerMitra - Agentic Marine Intelligence',
-        short_name: 'NeerMitra',
-        description: 'Intelligence for Safer Seas. Optimization for Greener Fleets.',
-        theme_color: '#030712',
-        background_color: '#030712',
+        name: 'ORCA — NeerMitra Marine Intelligence Platform',
+        short_name: 'ORCA',
+        description: 'Agentic AI marine intelligence for real-time ocean weather, fishing zone advisory, and coastal safety.',
+        theme_color: '#0B3954',
+        background_color: '#F8FCFD',
         display: 'standalone',
         icons: [
           {

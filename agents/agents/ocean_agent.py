@@ -321,16 +321,19 @@ def ocean_agent(
                 },
             )
 
-    except Exception:
-        # Fallback ocean telemetry
+    except Exception as e:
+        import logging
+        logger = logging.getLogger("orca.ocean_agent")
+        logger.error(f"Ocean agent failed to fetch data: {e}")
+        # Fallback ocean telemetry: Strict NO-DATA fallback
         return OceanReport(
-            sst_celsius=28.4,
-            chlorophyll_mg_m3=0.48,
-            thermal_front_detected=True,
-            pfz_suitability_score=75.0,
+            sst_celsius=None,
+            chlorophyll_mg_m3=None,
+            thermal_front_detected=False,
+            pfz_suitability_score=None,
             source_timestamps={
-                "sst": "copernicus_fallback",
-                "chlorophyll": "modis_fallback",
-                "thermal_front": "estimated",
+                "sst": "DATA_UNAVAILABLE",
+                "chlorophyll": "DATA_UNAVAILABLE",
+                "thermal_front": "DATA_UNAVAILABLE",
             },
         )

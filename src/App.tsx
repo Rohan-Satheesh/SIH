@@ -19,7 +19,7 @@ export default function App() {
       <Routes>
         {/* Operational Marine App routes wrapped in sunlight-readable AppShell */}
         <Route element={<AppShell />}>
-          <Route path="/" element={<HomeDashboard />} />
+          <Route path="/" element={<AssistantView />} />
           <Route path="/weather" element={<WeatherView />} />
           <Route path="/sea" element={<SeaConditionsView />} />
           <Route path="/zones" element={<FishermanMode />} />

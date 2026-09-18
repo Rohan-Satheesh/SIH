@@ -44,7 +44,6 @@ logger = logging.getLogger("vector_indexer")
 # -----------------------------------------------------------------------------
 try:
     import chromadb
-    from chromadb.config import Settings
     HAS_CHROMADB = True
 except ImportError:
     HAS_CHROMADB = False

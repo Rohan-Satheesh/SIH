@@ -1,0 +1,176 @@
+### 1. Executive Summary
+The current NeerMitra system possesses a robust and functional ETL data pipeline (successfully pushing data to Backblaze B2/SQLite) and a beautifully designed frontend. However, the NLP and Agent layer (`nlp/orca_service.py` and `agents/orchestrator/graph.py`) relies heavily on rigid, regex-based keyword matching (e.g., Hinglish/Manglish dictionaries) and hardcoded mock data fallbacks (e.g., `random.uniform()` in `ocean_agent.py`). It acts as a text synthesizer rather than a true cognitive engine. Transforming this into a genuine, data-driven AI requires shifting to a structured LLM-parser that retrieves real data, applies deterministic safety thresholds, and generates conditional responses without inventing data.
+
+### 2. Existing Architecture
+*   **Frontend:** React (Vite) dashboard (`HomeDashboard.tsx`, `MarineMap.tsx`).
+*   **Backend:** FastAPI/Uvicorn (`server/src/controllers/chat_controller.py`).
+*   **Agent Orchestrator:** LangGraph state machine (`agents/orchestrator/graph.py`).
+*   **NLP Pipeline:** `nlp/orca_service.py` uses predefined regex to detect language, translates to English, does keyword-based intent classification, pulls static RAG context, and synthesizes an answer.
+*   **Data Pipeline:** Automated ETL schedulers (`pipeline_runner.py`) actively pushing Copernicus, GEE, NOAA, INCOIS, and IMD data to B2/SQLite.
+
+### 3. Current NLP Pipeline Assessment
+The current pipeline violates the core goal of a "data-driven NLP system" in several ways:
+1.  **Hardcoded Intents:** `detect_alert_type` and `detect_hinglish` use static word lists.
+2.  **Invented Data:** `ocean_agent.py` contains a try-except block that explicitly falls back to `random.uniform()` to invent SST, Chlorophyll, and PFZ scores if B2 fetches fail. 
+3.  **Static Isolation:** The NLP service (`orca_service.py`) operates largely independently of the dynamic LangGraph swarm (`run_marine_agent`), leading to a disjointed flow.
+
+### 4. What the Intended Architecture Requires
+1.  **Stage 1 (Query Understanding):** An LLM must replace the regex dictionaries to output a structured JSON plan (Intent, Entities, Required Parameters, Language).
+2.  **Stage 2 (Actual Data Retrieval):** Agents must strictly fetch from B2 or the database using the query plan, failing gracefully if data is missing, rather than generating random numbers.
+3.  **Stage 3 (Conditional Analysis):** A strictly deterministic, non-LLM Python module must calculate risk levels based on INCOIS/IMD thresholds (e.g., Wave > 2.5m = DANGER). LLMs should never calculate safety limits.
+4.  **Stage 4 (Conditional Response Generation):** The LLM receives the deterministic safety conclusion + the actual data, and generates a fisherman-friendly response strictly anchored to that context.
+
+### 5. Detailed Requirements Checklist
+
+#### A. Existing files that need modification
+*   `nlp/orca_service.py`
+    *   *Current:* Hardcoded regex, translation, and RAG synthesis.
+    *   *Modification:* Deprecate regex dictionaries (`detect_hinglish`, `detect_alert_type`). Route all chat requests directly to the LangGraph orchestrator.
+*   `agents/orchestrator/graph.py`
+    *   *Current:* Routes between mocked agent nodes.
+    *   *Modification:* Remove mock wrappers; implement strict conditional routing based on the LLM Planner's JSON output.
+*   `agents/agents/ocean_agent.py` & `weather_agent.py`
+    *   *Current:* Contains `random.seed()` and `random.uniform()` fallbacks.
+    *   *Modification:* Remove all random fallbacks. If data is unavailable, return a strict "DATA_UNAVAILABLE" payload.
+*   `agents/planner/planner.py`
+    *   *Current:* Basic/mocked routing.
+    *   *Modification:* Upgrade to use Gemini Structured Outputs (Pydantic) to extract Intent, Location, Date, and Required Data.
+
+#### B. New files that need to be created
+*   `agents/analyzer/safety_rules.py`
+    *   *Purpose:* Deterministic analysis engine.
+    *   *Inputs:* Raw wave, wind, and IMD warnings.
+    *   *Outputs:* Strict `SAFE`, `CAUTION`, `DANGER` enums.
+*   `shared/schemas/query_schema.py`
+    *   *Purpose:* Pydantic models for Stage 1 query understanding and Stage 5 Data Contracts.
+
+#### C. Required packages
+*   *No new packages are strictly required.* The environment already has `pydantic` (for structured outputs), `langchain-google-genai` (for Gemini), and `b2sdk`/`boto3` (for data retrieval). 
+
+#### D. Required API integrations
+| User intent | Required data | Existing source | Missing source | Retrieval method |
+| :--- | :--- | :--- | :--- | :--- |
+| Marine weather | Wind, Waves | NOAA GFS-Wave (Existing) | None | B2 JSON / SQLite |
+| Safety warnings | Cyclone, Sea state | IMD / INCOIS (Existing) | None | B2 JSON / SQLite |
+| Fishing zones | PFZ, SST, Chlorophyll | Copernicus / GEE (Existing)| None | B2 NetCDF/GeoTIFF |
+| Fish market prices| Market rates | **Missing** | Govt. Price API | TBD |
+| Boat location | GPS coordinates | **Missing** | AIS / NavIC API | TBD |
+
+#### E. Required environment variables
+*   All required variables (`B2_APPLICATION_KEY`, `COPERNICUS_USERNAME`, `GEMINI_API_KEY`, etc.) are already successfully configured in `.env`.
+
+#### F. Required database changes
+*   **Table:** `data_freshness` (SQLite/Postgres).
+    *   *Change:* Ensure indexes exist on `dataset_name` and `timestamp` to quickly verify if data is < 24 hours old before responding to the user.
+
+#### G. Required frontend changes
+*   **Chat Interface (`HomeDashboard.tsx`):**
+    *   Add explicit data source citations (e.g., *"Source: INCOIS, 2 hours ago"*) to chat bubbles.
+    *   Handle `DATA_UNAVAILABLE` states gracefully without breaking the UI.
+
+---
+
+### 13. Architecture Diagram (Data Flow)
+
+```mermaid
+graph TD
+    A[User Query: Tomorrow fishing pokamo?] --> B[Stage 1: Query Planner LLM]
+    B --> C{Structured Query Plan}
+    
+    C -->|Intent: Weather, Loc: Kochi, Date: +1d| D[Stage 2: Specialist Agents]
+    
+    D --> E[Weather Agent]
+    D --> F[Ocean Agent]
+    
+    E -->|Fetch B2/DB| G{Live NOAA/IMD Data}
+    F -->|Fetch B2| H{Live Copernicus SST}
+    
+    G --> I[Stage 3: Deterministic Analyzer]
+    H --> I
+    
+    I -->|Rule: Wave > 2.5m = DANGER| J[Stage 4: Explainer Agent LLM]
+    
+    J --> K[Final Localized Response]
+    
+    G -.->|API Failure/Missing| L[Missing Data Path]
+    L --> J
+```
+
+---
+
+### 14. Data Contracts
+
+**1. Query Understanding (Output from Planner)**
+```json
+{
+  "intent": "FISHING_SUITABILITY",
+  "location": {"lat": 9.9312, "lon": 76.2673, "name": "Kochi"},
+  "date": "2026-09-19",
+  "required_data": ["WAVE_HEIGHT", "WIND_SPEED", "PFZ", "IMD_WARNINGS"],
+  "language": "ml"
+}
+```
+
+**2. Analysis Result (Output from Deterministic Engine)**
+```json
+{
+  "safety_decision": "DANGER",
+  "triggering_condition": "Wave height (2.8m) exceeds safe threshold (2.5m)",
+  "data_freshness_hours": 2,
+  "sources_used": ["NOAA_GFS", "IMD"]
+}
+```
+
+---
+
+### 15. Conditional Analysis Requirements
+*   **Fishing suitability:** Requires Wave < 1.5m, Wind < 15kts, NO active IMD alerts. If true, evaluate PFZ score.
+*   **Rough sea conditions / Strong wind:** Wave >= 1.5m OR Wind >= 15kts -> `CAUTION`. Wave >= 2.5m OR Wind >= 25kts -> `DANGER`.
+*   **Outdated/Missing Data:** If timestamp > 24 hours old, the system **must** append a warning: *"Data is outdated. Proceed with caution."* If data is missing entirely, system **must** refuse to give a safety clearance.
+
+---
+
+### 16. Current Blockers
+
+#### Critical Blockers
+1.  **Invented Fallback Data**
+    *   *Evidence:* `agents/agents/ocean_agent.py` Lines 326-340 (`random.uniform(27.5, 30.5)`).
+    *   *Impact:* Generates fake SST/Chlorophyll data when B2 fails. Extremely dangerous for fishermen.
+    *   *Fix:* Remove random generation. Raise a `DataUnavailableException`.
+    *   *Priority:* CRITICAL
+2.  **Hardcoded NLP Routing**
+    *   *Evidence:* `nlp/orca_service.py` Lines 63-199 (`detect_hinglish`, `detect_manglish` static sets).
+    *   *Impact:* Cannot understand complex queries or typos outside the hardcoded dictionary.
+    *   *Fix:* Replace with an LLM-based intent classifier.
+    *   *Priority:* HIGH
+
+---
+
+### 17. Testing Plan
+1.  **Query Understanding:** Test "mazha undaakumo" (Manglish), "aaj mausam kaisa hai" (Hinglish), and "is it safe to fish?" to ensure the Planner LLM outputs the exact same intent JSON.
+2.  **Conditional Analysis:** Provide mock NOAA data with `wave_height = 1.0m` -> Assert `SAFE`. Provide `wave_height = 3.0m` -> Assert `DANGER`.
+3.  **Missing Data:** Cut off network access to B2. Assert the system replies "Live data unavailable, cannot confirm safety" rather than inventing data.
+
+---
+
+### 18. Implementation Order
+1.  **Clean up Blockers:** Strip out all `random` mock data from the specialist agents.
+2.  **Data Contracts:** Implement the `QueryPlan` Pydantic schemas.
+3.  **Query Planner:** Wire the LangGraph Planner node to use Gemini structured outputs.
+4.  **Deterministic Analyzer:** Build `safety_rules.py` to evaluate the data.
+5.  **Explainer Generation:** Modify the Explainer Agent to strictly ingest the JSON context and synthesize the final answer.
+
+### 19. What Can Be Implemented Now
+Everything related to Weather, Ocean, PFZ, and Safety can be implemented immediately, as your automated ETL pipeline is currently successfully running and populating B2.
+
+### 20. What Requires Additional Data
+*   **Fish Market Prices:** Requires a live agricultural/fisheries pricing API.
+*   **Fish Species Suitability:** Requires a species-to-SST static knowledge graph.
+
+### 21. What is Currently Impossible
+*   **Live Boat GPS:** Unless connected to an AIS/NavIC receiver, we can only analyze user-selected locations, not track the boat dynamically offshore.
+
+### 22. Questions for You Before Implementation
+1.  **Data Staleness:** If the B2 pipeline fails and data is exactly 26 hours old, should the assistant still provide it with a massive warning, or flatly refuse to answer?
+2.  **API Fallbacks:** Do you have a secondary API (e.g., OpenWeatherMap) you'd like me to integrate for weather, or should we strictly rely on NOAA/IMD?
+3.  **Scope:** Shall we proceed with implementing Step 1 (Cleaning up the Random mock data and implementing the Query Planner)?

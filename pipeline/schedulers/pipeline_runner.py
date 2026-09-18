@@ -38,7 +38,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 try:
     from apscheduler.schedulers.background import BackgroundScheduler
-    from apscheduler.schedulers.blocking import BlockingScheduler
     from apscheduler.triggers.cron import CronTrigger
     HAS_APSCHEDULER = True
 except ImportError:
@@ -78,8 +77,7 @@ except ImportError:
 from pipeline.schedulers.cron_config import (
     JOB_SCHEDULES,
     JobConfig,
-    RetryConfig,
-    get_schedule_summary
+    RetryConfig
 )
 from pipeline.storage.db_writer import DBWriter
 
@@ -519,7 +517,7 @@ def run_scheduler_cli():
     runner.print_schedule_table()
 
     # Graceful signal handler
-    def handle_exit(signum, frame):
+    def handle_exit(_signum, _frame):
         print("\nShutdown signal received. Exiting...")
         runner.shutdown(wait=False)
         sys.exit(0)

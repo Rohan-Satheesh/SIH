@@ -8,11 +8,11 @@ export default function MobileNavBar() {
   const { t } = useLanguage();
 
   const navItems = [
-    { label: t('navHome'), path: '/', icon: Home },
+    { label: t('navAssistant') || 'AI Assistant', path: '/', icon: MessageSquare },
+    { label: t('navHome') || 'Dashboard', path: '/dashboard', icon: Home },
     { label: t('navWeather'), path: '/weather', icon: CloudSun },
-    { label: t('navSea'), path: '/sea', icon: Waves },
     { label: t('navZones'), path: '/zones', icon: Fish },
-    { label: t('navAssistant'), path: '/assistant', icon: MessageSquare },
+    { label: t('navSafety'), path: '/safety', icon: ShieldAlert, alert: true },
   ];
 
   return (
@@ -36,12 +36,15 @@ export default function MobileNavBar() {
             {({ isActive }) => (
               <>
                 <div className={cn(
-                  "p-1 rounded-lg transition-transform",
+                  "p-1 rounded-lg transition-transform relative",
                   isActive && "scale-110"
                 )}>
-                  <Icon className={cn("w-5 h-5", isActive ? "text-[#176B87]" : "text-[#5B7282]")} />
+                  <Icon className={cn("w-5 h-5", isActive ? "text-[#176B87]" : item.alert ? "text-[#C0392B]" : "text-[#5B7282]")} />
+                  {item.alert && !isActive && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#C0392B] rounded-full animate-pulse" />
+                  )}
                 </div>
-                <span className="text-[10px] leading-tight truncate mt-0.5 tracking-tight">
+                <span className={cn("text-[10px] leading-tight truncate mt-0.5 tracking-tight", item.alert && !isActive && "text-[#C0392B]")}>
                   {item.label}
                 </span>
               </>

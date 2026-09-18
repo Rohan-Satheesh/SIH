@@ -10,7 +10,6 @@ import re
 
 try:
     from langdetect import DetectorFactory, detect_langs
-    from langdetect.lang_detect_exception import LangDetectException
     DetectorFactory.seed = 0
     HAS_LANGDETECT = True
 except ImportError:

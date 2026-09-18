@@ -19,11 +19,11 @@ export default function Sidebar() {
   const { t } = useLanguage();
 
   const primaryItems = [
-    { label: t('navHome'), path: '/', icon: Home },
+    { label: t('navAssistant') || 'Neer Mitra AI', path: '/', icon: MessageSquare },
+    { label: t('navHome') || 'Dashboard', path: '/dashboard', icon: Home },
     { label: t('navWeather'), path: '/weather', icon: CloudSun },
     { label: t('navSea'), path: '/sea', icon: Waves },
     { label: t('navZones'), path: '/zones', icon: Fish },
-    { label: t('navAssistant'), path: '/assistant', icon: MessageSquare },
     { label: t('navSafety'), path: '/safety', icon: ShieldAlert, alert: true },
   ];
 

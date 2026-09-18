@@ -24,13 +24,14 @@ from agents.orchestrator.state import AgentState
 # ─────────────────────────────────────────────────────────────
 
 # All possible specialist agent node names
-SPECIALIST_AGENTS = {"weather_agent", "ocean_agent", "geospatial_agent"}
+SPECIALIST_AGENTS = {"weather_agent", "ocean_agent", "geospatial_agent", "knowledge_agent"}
 
 # Mapping from plan agent keys → graph node names
 AGENT_KEY_TO_NODE = {
     "weather": "weather_agent",
     "ocean": "ocean_agent",
     "geospatial": "geospatial_agent",
+    "knowledge": "knowledge_agent",
 }
 
 # Default agents when no plan is available
@@ -89,7 +90,7 @@ def should_run_safety(state: AgentState) -> Literal["safety_agent", "explainer"]
     if plan and plan.get("required_agents"):
         required = plan["required_agents"]
         # Only skip safety for pure informational queries
-        if "safety" not in required and plan.get("intent") in ("TREND_ANALYSIS", "GENERAL_INFO"):
+        if "safety" not in required and plan.get("intent") in ("TREND_ANALYSIS", "GENERAL_INFO", "KNOWLEDGE_QUERY"):
             return "explainer"
 
     # Default: always run safety agent

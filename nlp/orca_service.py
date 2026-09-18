@@ -12,8 +12,7 @@ Pipeline:
 7. Translate the answer into the user's language
 """
 
-from nlp.llm.gemini_fallback import (
-    ask_gemini,
+from nlp.llm.groq_client import (
     synthesize_marine_response,
     clean_rag_leakage,
 )

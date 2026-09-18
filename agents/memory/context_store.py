@@ -1,4 +1,5 @@
 import re
+import math
 from typing import Dict, Tuple, Optional, Any
 
 PORTS_AND_COORDINATES: Dict[str, Tuple[float, float, str]] = {
@@ -30,6 +31,28 @@ PORTS_AND_COORDINATES: Dict[str, Tuple[float, float, str]] = {
     "porbandar": (21.64, 69.60, "Porbandar Marine Corridor PB-01")
 }
 
+def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0 # Earth radius in km
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+def get_closest_center(lat: float, lon: float) -> Tuple[float, float, str]:
+    closest_dist = float('inf')
+    closest_center = None
+    for key, (c_lat, c_lon, name) in PORTS_AND_COORDINATES.items():
+        dist = haversine(lat, lon, c_lat, c_lon)
+        if dist < closest_dist:
+            closest_dist = dist
+            closest_center = (c_lat, c_lon, name)
+            
+    if closest_center:
+        return (closest_center[0], closest_center[1], f"{closest_center[2]} (Closest Data Center)")
+    return (lat, lon, f"Coordinates ({lat:.2f}°N, {lon:.2f}°E)")
+
+
 def extract_target_location(
     query: str, 
     session: Optional[Dict[str, Any]] = None,
@@ -51,7 +74,7 @@ def extract_target_location(
         try:
             lat = float(coord_match.group(1))
             lon = float(coord_match.group(2))
-            loc = (lat, lon, f"Coordinates ({lat:.2f}°N, {lon:.2f}°E)")
+            loc = get_closest_center(lat, lon)
             if session is not None:
                 session["last_location"] = loc
             return loc
@@ -73,8 +96,7 @@ def extract_target_location(
             lat = coords.get("lat") or coords.get("latitude")
             lon = coords.get("lon") or coords.get("lng") or coords.get("longitude")
             if lat is not None and lon is not None:
-                loc_name = context.get("location") or f"Sector ({float(lat):.2f}°N, {float(lon):.2f}°E)"
-                loc = (float(lat), float(lon), str(loc_name))
+                loc = get_closest_center(float(lat), float(lon))
                 if session is not None:
                     session["last_location"] = loc
                 return loc
@@ -95,3 +117,4 @@ def extract_target_location(
 
     # 5. Default fallback
     return (9.93, 75.82, "Kochi Sector K-04")
+

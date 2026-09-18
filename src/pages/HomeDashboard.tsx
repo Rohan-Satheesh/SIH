@@ -15,14 +15,19 @@ import {
   MapPin, 
   Compass,
   RefreshCw,
-  Thermometer
+  Thermometer,
+  TrendingUp,
+  Bell,
+  X,
+  Mic
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   fetchLiveMarineData, 
   getCachedMarineData, 
-  type LiveMarineData 
+  type LiveMarineData,
+  type HourlyForecastItem
 } from '@/services/liveMarineService';
 
 export default function HomeDashboard() {
@@ -32,6 +37,8 @@ export default function HomeDashboard() {
   const [data, setData] = useState<LiveMarineData>(getCachedMarineData());
   const [loading, setLoading] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
+  const [alertBanner, setAlertBanner] = useState<{title: string; description: string; severity: string} | null>(null);
+  const [alertDismissed, setAlertDismissed] = useState(false);
 
   const loadData = async (force: boolean = false) => {
     setLoading(true);
@@ -45,8 +52,28 @@ export default function HomeDashboard() {
     }
   };
 
+  // Fetch active alerts from backend
+  const fetchAlerts = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(`/api/alerts?lat=${lat}&lon=${lng}`);
+      if (res.ok) {
+        const alertData = await res.json();
+        if (alertData.alerts && alertData.alerts.length > 0) {
+          const topAlert = alertData.alerts[0];
+          setAlertBanner({ title: topAlert.title, description: topAlert.description, severity: topAlert.severity });
+          setAlertDismissed(false);
+        } else {
+          setAlertBanner(null);
+        }
+      }
+    } catch {
+      // Silently fail — alerts are non-critical
+    }
+  };
+
   useEffect(() => {
     loadData();
+    fetchAlerts(data.latitude, data.longitude);
 
     // Listen for coordinate changes from topbar or map
     const handleSectorChange = (e: any) => {
@@ -57,6 +84,7 @@ export default function HomeDashboard() {
           const now = new Date();
           setLastRefreshed(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         });
+        fetchAlerts(lat, lng);
       }
     };
 
@@ -214,6 +242,35 @@ export default function HomeDashboard() {
         </div>
       </section>
 
+      {/* Active Alert Banner (PRD R1-C08) */}
+      {alertBanner && !alertDismissed && (
+        <section className={cn(
+          "rounded-2xl p-3.5 border shadow-sm flex items-start gap-3 animate-in slide-in-from-top-2 duration-300",
+          alertBanner.severity === 'WARNING' ? 'bg-[#FEF6E8] border-[#F8DAA5]' : 'bg-[#FDF0EE] border-[#F5B8B1]'
+        )}>
+          <Bell className={cn(
+            "w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse",
+            alertBanner.severity === 'WARNING' ? 'text-[#D99116]' : 'text-[#C0392B]'
+          )} />
+          <div className="flex-1 min-w-0">
+            <h3 className={cn(
+              "text-sm font-bold",
+              alertBanner.severity === 'WARNING' ? 'text-[#D99116]' : 'text-[#C0392B]'
+            )}>
+              {alertBanner.title}
+            </h3>
+            <p className="text-xs text-[#5B7282] mt-0.5 line-clamp-2">{alertBanner.description}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAlertDismissed(true)}
+            className="p-1 hover:bg-white/50 rounded-lg transition-colors cursor-pointer flex-shrink-0"
+          >
+            <X className="w-4 h-4 text-[#5B7282]" />
+          </button>
+        </section>
+      )}
+
       {/* 3. Quick Status Cards Grid (4 Big Sunlight-Readable Cards) */}
       <section>
         <div className="flex items-center justify-between mb-2">
@@ -309,6 +366,61 @@ export default function HomeDashboard() {
         </div>
       </section>
 
+      {/* Hourly Forecast Trend (PRD R1-C09) */}
+      {data.hourlyForecast && data.hourlyForecast.length > 0 && (
+        <section className="marine-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-extrabold text-[#0B3954] tracking-tight uppercase flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-[#176B87]" />
+              {language === 'ML' ? 'അടുത്ത 12 മണിക്കൂർ പ്രവചനം' : '12-Hour Marine Forecast'}
+            </h3>
+          </div>
+
+          <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {data.hourlyForecast.slice(0, 12).map((item, idx) => {
+              const waveBarHeight = Math.min(100, Math.round((item.waveHeight / 3.5) * 100));
+              const windBarHeight = Math.min(100, Math.round((item.windSpeed / 50) * 100));
+              const isHigh = item.waveHeight >= 2.0 || item.windSpeed >= 35;
+              const isMed = item.waveHeight >= 1.5 || item.windSpeed >= 25;
+              return (
+                <div key={idx} className="flex flex-col items-center min-w-[52px] flex-shrink-0">
+                  <span className="text-[10px] font-bold text-[#5B7282] mb-1">{item.hour}</span>
+                  <div className="flex items-end gap-0.5 h-12">
+                    <div
+                      className={cn(
+                        "w-3 rounded-t transition-all",
+                        isHigh ? 'bg-[#C0392B]' : isMed ? 'bg-[#D99116]' : 'bg-[#176B87]'
+                      )}
+                      style={{ height: `${waveBarHeight}%` }}
+                      title={`Wave: ${item.waveHeight}m`}
+                    />
+                    <div
+                      className="w-3 rounded-t bg-[#A0B2BC]"
+                      style={{ height: `${windBarHeight}%` }}
+                      title={`Wind: ${item.windSpeed} km/h`}
+                    />
+                  </div>
+                  <span className={cn(
+                    "text-[9px] font-bold mt-0.5",
+                    isHigh ? 'text-[#C0392B]' : isMed ? 'text-[#D99116]' : 'text-[#176B87]'
+                  )}>
+                    {item.waveHeight}m
+                  </span>
+                  <span className="text-[9px] text-[#5B7282]">{item.temp}°</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-4 mt-2 pt-2 border-t border-[#E8F3F7] text-[10px] text-[#5B7282]">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#176B87]"></span> {language === 'ML' ? 'തിരമാല' : 'Wave'}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#A0B2BC]"></span> {language === 'ML' ? 'കാറ്റ്' : 'Wind'}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#D99116]"></span> {language === 'ML' ? 'മിതം' : 'Moderate'}</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-[#C0392B]"></span> {language === 'ML' ? 'ഉയർന്നത്' : 'High'}</span>
+          </div>
+        </section>
+      )}
+
       {/* 4. Quick Action Cards (Easy-To-Tap Navigation for Fishermen) */}
       <section className="space-y-2">
         <h3 className="text-sm font-extrabold text-[#0B3954] tracking-tight uppercase">
@@ -370,10 +482,10 @@ export default function HomeDashboard() {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-[#0B3954] group-hover:text-[#176B87] transition-colors">
-                  {language === 'ML' ? 'നീർമിത്ര എഐ സഹായി' : 'Ask NeerMitra AI Guide'}
+                  {language === 'ML' ? 'ORCA എഐ അഡ്വൈസറി' : 'Ask ORCA AI Advisory'}
                 </span>
                 <span className="text-xs text-[#5B7282]">
-                  {language === 'ML' ? 'ശബ്ദത്തിലൂടെയോ ടൈപ്പ് ചെയ്തോ ചോദിക്കാം' : 'Voice queries in Malayalam & English'}
+                  {language === 'ML' ? 'ശബ്ദം & ടെക്സ്റ്റ് — 7 ഭാഷകൾ' : 'Voice & text in 7 languages'}
                 </span>
               </div>
             </div>

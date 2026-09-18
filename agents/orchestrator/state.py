@@ -78,6 +78,7 @@ class AgentState(TypedDict, total=False):
     ocean_data: Optional[OceanReport]           # From Ocean Agent
     geo_data: Optional[BoundaryCheck]           # From Geospatial Agent
     pfz_data: Optional[list[PFZResult]]         # PFZ nearest-neighbor results
+    knowledge_data: Optional[dict]              # From Knowledge Agent
 
     # ── Safety & Risk Output ──
     safety_data: Optional[SafetyAssessment]     # From Safety & Risk Agent
