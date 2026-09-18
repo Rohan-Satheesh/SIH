@@ -15,6 +15,7 @@ import {
   Navigation
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/services/api';
 import { 
   fetchLiveMarineData, 
   getCachedMarineData, 
@@ -76,7 +77,7 @@ export default function KPIBar() {
     // Initial fetch for default sector
     loadTelemetry(selectedSector.lat, selectedSector.lng, selectedSector.name, false);
 
-    const fetchAis = () => fetch('/api/ais/vessels')
+    const fetchAis = () => fetch(apiUrl('/api/ais/vessels'))
       .then(response => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();

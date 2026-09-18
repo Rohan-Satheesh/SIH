@@ -3,6 +3,7 @@ import { Send, BrainCircuit, Cpu, CheckCircle2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ProvenanceModal from '@/components/hud/ProvenanceModal';
 import { getSelectedLocation } from '@/services/liveMarineService';
+import { apiUrl } from '@/services/api';
 
 interface StructuredOutput {
   queryText?: string;
@@ -63,7 +64,7 @@ export default function AICopilot() {
         }));
 
       const currentLoc = getSelectedLocation();
-      const res = await fetch('/api/chat', {
+      const res = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

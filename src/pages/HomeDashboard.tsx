@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { apiUrl } from '@/services/api';
 import { 
   fetchLiveMarineData, 
   getCachedMarineData, 
@@ -55,7 +56,7 @@ export default function HomeDashboard() {
   // Fetch active alerts from backend
   const fetchAlerts = async (lat: number, lng: number) => {
     try {
-      const res = await fetch(`/api/alerts?lat=${lat}&lon=${lng}`);
+      const res = await fetch(apiUrl(`/api/alerts?lat=${lat}&lon=${lng}`));
       if (res.ok) {
         const alertData = await res.json();
         if (alertData.alerts && alertData.alerts.length > 0) {

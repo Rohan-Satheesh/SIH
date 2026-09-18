@@ -5,6 +5,7 @@ import ScanEffect from '@/components/hud/ScanEffect';
 import ProvenanceModal from '@/components/hud/ProvenanceModal';
 import { Layers, ShieldCheck, Info, RefreshCw, ChevronDown, ChevronUp, Compass, Navigation, MapPin, Anchor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiUrl } from '@/services/api';
 import { 
   getSelectedLocation, 
   setSelectedLocation, 
@@ -414,7 +415,7 @@ export default function MarineMap({
     if (!showVessels) return;
 
     const fetchVessels = () => {
-      fetch('/api/ais/vessels')
+      fetch(apiUrl('/api/ais/vessels'))
         .then(response => {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return response.json();
@@ -436,7 +437,7 @@ export default function MarineMap({
 
   // 1. Fetch live feature counts and dynamic layers from backend
   useEffect(() => {
-    fetch('/api/spatial/layers')
+    fetch(apiUrl('/api/spatial/layers'))
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -467,20 +468,20 @@ export default function MarineMap({
       if (isEnabled && !layerData[layer.layer_name] && !loadingLayers[layer.layer_name]) {
         setLoadingLayers(prev => ({ ...prev, [layer.layer_name]: true }));
         
-        let endpoint = `/api/spatial/layers/${layer.layer_name}`;
+        let endpoint = apiUrl(`/api/spatial/layers/${layer.layer_name}`);
         if (layer.layer_name === 'sst_thermal_fronts') {
-          endpoint = '/api/geo/ocean-layers?layer_type=sst';
+          endpoint = apiUrl('/api/geo/ocean-layers?layer_type=sst');
         } else if (layer.layer_name === 'chlorophyll_blooms') {
-          endpoint = '/api/geo/ocean-layers?layer_type=chlorophyll';
+          endpoint = apiUrl('/api/geo/ocean-layers?layer_type=chlorophyll');
         } else if (layer.layer_name === 'composite_risk_grid') {
-          endpoint = '/api/geo/composite-risk-grid';
+          endpoint = apiUrl('/api/geo/composite-risk-grid');
         }
 
         const fetchLayer = async () => {
           try {
             let res = await fetch(endpoint);
-            if (!res.ok && endpoint.startsWith('/api/spatial/layers/')) {
-              res = await fetch(`/api/geo/layer/${layer.layer_name}`);
+            if (!res.ok && endpoint.includes('/api/spatial/layers/')) {
+              res = await fetch(apiUrl(`/api/geo/layer/${layer.layer_name}`));
             }
             if (!res.ok) {
               throw new Error(`HTTP ${res.status}`);

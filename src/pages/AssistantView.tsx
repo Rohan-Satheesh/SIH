@@ -22,6 +22,7 @@ import {
 import { useLanguage } from '../contexts/LanguageContext';
 import { Link } from 'react-router-dom';
 import { getSelectedLocation } from '@/services/liveMarineService';
+import { apiUrl } from '@/services/api';
 import { cn } from '@/lib/utils';
 
 interface EvidenceSource {
@@ -187,7 +188,7 @@ export function AssistantView() {
 
     try {
       const currentLoc = getSelectedLocation();
-      const res = await fetch('/api/chat', {
+      const res = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -283,7 +284,7 @@ export function AssistantView() {
 
     try {
       const currentLoc = getSelectedLocation();
-      const res = await fetch('/api/chat', {
+      const res = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -311,7 +312,7 @@ export function AssistantView() {
       msg.id === messageId ? { ...msg, feedback: type } : msg
     ));
     // Fire-and-forget feedback to backend
-    fetch('/api/feedback', {
+    fetch(apiUrl('/api/feedback'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
