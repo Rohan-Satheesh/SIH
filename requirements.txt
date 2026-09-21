@@ -45,6 +45,7 @@ langchain>=0.3.0
 langgraph>=0.2.0
 langchain-google-genai>=2.0.0
 langchain-text-splitters>=1.0.0
+groq>=0.11.0
 
 # -------------------------
 # Google AI
