@@ -105,6 +105,7 @@ def _call_groq_api(api_key: str, prompt: str, system_prompt: str = NEERMITRA_SYS
             "model": "qwen/qwen3.8-27b",
             "messages": messages,
             "temperature": 0.2,
+            "max_completion_tokens": 512,
         }
         
         if response_format:
