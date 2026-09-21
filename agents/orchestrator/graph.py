@@ -192,6 +192,7 @@ from agents.orchestrator.router import (
 )
 
 from agents.planner.planner import planner_node
+from nlp.translation.translator import translate_to_english
 
 
 # ============================================================
@@ -610,6 +611,8 @@ def run_marine_agent(
     CopilotResponse dict.
     """
 
+    planner_query = translate_to_english(query)
+
     lat, lon, loc_name = extract_target_location(
         query,
         session=None,
@@ -626,7 +629,7 @@ def run_marine_agent(
         vessel = context.get("vessel_type")
 
     initial_state: AgentState = {
-        "query": query,
+        "query": planner_query,
         "language": language or "en",
         "session_id": session_id or "default",
         "location": [lat, lon],
