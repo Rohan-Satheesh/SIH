@@ -43,13 +43,22 @@ def casual_response(message: str, language: str = "EN") -> CopilotResponse:
 def handle_chat_request(req: ChatRequest) -> CopilotResponse:
     """
     Main Processing Pipeline:
-    Routes all queries to the NeerMitra Agent Swarm (LangGraph) for planning, intent extraction, and execution.
+    Routes all queries to the NeerMitra Agent Swarm (LangGraph)
+    for planning, intent extraction, and execution.
     """
-    requested_lang = None
-    if req.context and isinstance(req.context, dict):
+    requested_lang = req.language
+
+    if not requested_lang and req.context and isinstance(req.context, dict):
         requested_lang = req.context.get("language")
 
     detected_lang = detect_language(req.message, requested_lang)
+
+    logger.info(
+        "Language resolution: requested_lang=%r detected_lang=%r req.language=%r",
+        requested_lang,
+        detected_lang,
+        req.language,
+    )
 
     # Check casual greeting
     if is_casual_message(req.message):
@@ -57,23 +66,28 @@ def handle_chat_request(req: ChatRequest) -> CopilotResponse:
 
     # Route EVERYTHING ELSE to NeerMitra Agent Swarm
     engine = get_db_engine()
+
     try:
         logger.info(
             "Chat controller message: repr=%r unicode_points=%s",
             req.message,
             [hex(ord(ch)) for ch in req.message],
         )
+
         agent_result = run_marine_agent(
             engine,
             req.message,
             detected_lang,
             context=req.context,
             session_id=req.session_id,
-            history=req.history
+            history=req.history,
         )
+
         return CopilotResponse(**agent_result)
+
     except Exception as exc:
         logger.error(f"Agent execution error: {exc}")
+
         return CopilotResponse(
             text="Live marine intelligence is temporarily unavailable. Safe navigation advised.",
             confidence=0,
