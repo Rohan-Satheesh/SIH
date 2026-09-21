@@ -12,13 +12,20 @@ Supports:
 
 from __future__ import annotations
 
+import logging
+import os
 import re
+
+from nlp.llm.groq_client import _call_groq_api
 
 from .marine_glossary import (
     localize_glossary_terms,
     protect_glossary_terms,
     restore_glossary_terms,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 SUPPORTED_LANGUAGES = {
@@ -457,6 +464,51 @@ def _normalize_whitespace(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _contains_malayalam(text: str) -> bool:
+    """Return whether text still contains Malayalam script characters."""
+    return re.search(r"[\u0D00-\u0D7F]", text) is not None
+
+
+def _translate_query_with_groq(
+    text: str,
+    source_language: str,
+) -> str:
+    """Translate an untranslated Malayalam query with the shared Groq client."""
+    if source_language != "ml" or not os.getenv("GROQ_API_KEY"):
+        return text
+
+    system_prompt = (
+        "You are a professional marine-domain query translator. "
+        "Translate Malayalam to concise English. Preserve the exact meaning. "
+        "Do not answer the question, add explanations, or invent marine data. "
+        "Return only the English translation. Preserve numbers, units, "
+        "abbreviations, and technical terms such as SST, PFZ, and IMBL."
+    )
+
+    try:
+        translated_text = _call_groq_api(
+            os.environ["GROQ_API_KEY"],
+            text,
+            system_prompt=system_prompt,
+        )
+    except Exception as exc:
+        logger.warning("Groq Malayalam query translation failed: %s", exc)
+        return text
+
+    if (
+        not isinstance(translated_text, str)
+        or not translated_text.strip()
+        or _contains_malayalam(translated_text)
+        or not _translation_preserves_source(text, translated_text)
+    ):
+        logger.warning(
+            "Discarding invalid Groq Malayalam query translation"
+        )
+        return text
+
+    return _normalize_whitespace(translated_text)
+
+
 def translate_to_english(text: str) -> str:
     """
     Translate a supported phrase into English.
@@ -488,6 +540,14 @@ def translate_to_english(text: str) -> str:
             source_phrase,
             english_phrase,
         )
+
+    if _contains_malayalam(translated_text):
+        groq_translation = _translate_query_with_groq(
+            translated_text,
+            "ml",
+        )
+        if groq_translation != translated_text:
+            return groq_translation
 
     return translated_text
 
@@ -734,6 +794,89 @@ def _translate_generic_response(
     return text
 
 
+def _is_substantially_english(text: str, target_language: str) -> bool:
+    """Identify mixed or mostly-English output needing full translation."""
+    if target_language != "ml":
+        return False
+
+    latin_letters = len(re.findall(r"[A-Za-z]", text))
+    malayalam_letters = len(re.findall(r"[\u0D00-\u0D7F]", text))
+
+    return (
+        latin_letters >= 8
+        and latin_letters > malayalam_letters
+    )
+
+
+def _translation_preserves_source(text: str, translated_text: str) -> bool:
+    """Reject translations that lose telemetry, abbreviations, or formatting."""
+    required_values = re.findall(
+        r"(?<!\w)\d+(?:\.\d+)?[ \t]*(?:mg/m³|°C|knots|m|%)?",
+        text,
+    )
+
+    for value in required_values:
+        if value not in translated_text:
+            return False
+
+    for abbreviation in ("PFZ", "SST", "IMBL"):
+        if re.search(rf"(?<!\w){abbreviation}(?!\w)", text):
+            if not re.search(
+                rf"(?<!\w){abbreviation}(?!\w)",
+                translated_text,
+            ):
+                return False
+
+    if text.count("**") != translated_text.count("**"):
+        return False
+
+    if text.count("\n\n") != translated_text.count("\n\n"):
+        return False
+
+    source_bullets = len(re.findall(r"(?m)^\s*[-*]\s+", text))
+    translated_bullets = len(
+        re.findall(r"(?m)^\s*[-*]\s+", translated_text)
+    )
+    return source_bullets == translated_bullets
+
+
+def _translate_with_groq(text: str, target_language: str) -> str:
+    """Translate a complete response with Groq, preserving source facts."""
+    if target_language != "ml" or not os.getenv("GROQ_API_KEY"):
+        return text
+
+    system_prompt = (
+        "You are a professional marine-domain translator. "
+        "Translate English into Malayalam. Preserve scientific values, "
+        "units, marine terminology, numerical values, abbreviations, "
+        "Markdown formatting, and paragraph breaks exactly. Do not add, "
+        "remove, or infer facts. Return only the translation."
+    )
+
+    try:
+        translated_text = _call_groq_api(
+            os.environ["GROQ_API_KEY"],
+            text,
+            system_prompt=system_prompt,
+        )
+    except Exception as exc:
+        logger.warning("Groq Malayalam translation failed: %s", exc)
+        return text
+
+    if (
+        not isinstance(translated_text, str)
+        or not translated_text.strip()
+        or not _translation_preserves_source(text, translated_text)
+    ):
+        logger.warning(
+            "Discarding Groq Malayalam translation that changed source facts "
+            "or formatting"
+        )
+        return text
+
+    return translated_text.strip()
+
+
 def translate_response(
     text: str,
     target_language: str = "en",
@@ -840,6 +983,14 @@ def translate_response(
             translated_text,
             replacements,
         )
+
+    if _is_substantially_english(translated_text, target_language):
+        groq_translation = _translate_with_groq(
+            normalized_text,
+            target_language,
+        )
+        if groq_translation != normalized_text:
+            translated_text = groq_translation
 
     return str(translated_text)
 

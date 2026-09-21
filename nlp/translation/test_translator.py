@@ -1,5 +1,6 @@
 import pytest
 
+import nlp.translation.translator as translator_module
 from nlp.translation.translator import (
     SUPPORTED_LANGUAGES,
     is_supported_language,
@@ -38,7 +39,9 @@ def test_same_language():
     assert result["target_language"] == "ml"
 
 
-def test_fallback_translation():
+def test_fallback_translation(monkeypatch):
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+
     result = translate_text(
         "മത്സ്യബന്ധനം",
         "ml",
@@ -194,6 +197,72 @@ def test_translate_to_english_collapses_whitespace():
     result = translate_to_english("  तेज़   हवा  ")
 
     assert result == "strong winds"
+
+
+def test_malayalam_query_uses_groq_for_semantic_english_translation(
+    monkeypatch,
+):
+    source = "കടലിലെ താപനില എത്രയാണ്?"
+    calls = []
+
+    def fake_groq(api_key, prompt, system_prompt):
+        calls.append((api_key, prompt, system_prompt))
+        return "What is the sea temperature?"
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(translator_module, "_call_groq_api", fake_groq)
+
+    result = translate_to_english(source)
+
+    assert result == "What is the sea temperature?"
+    assert calls[0][0] == "test-key"
+    assert calls[0][1] == source
+    assert "Do not answer the question" in calls[0][2]
+
+
+def test_english_query_does_not_call_groq(monkeypatch):
+    def unexpected_groq(*args, **kwargs):
+        raise AssertionError("English input should not call Groq")
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(
+        translator_module,
+        "_call_groq_api",
+        unexpected_groq,
+    )
+
+    assert (
+        translate_to_english("What is the sea temperature?")
+        == "What is the sea temperature?"
+    )
+
+
+def test_malayalam_pfz_query_preserves_abbreviation(monkeypatch):
+    source = "PFZ എവിടെയാണ്?"
+
+    def fake_groq(api_key, prompt, system_prompt):
+        return "Where is the PFZ?"
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(translator_module, "_call_groq_api", fake_groq)
+
+    assert translate_to_english(source) == "Where is the PFZ?"
+
+
+def test_malayalam_query_groq_failure_keeps_original(monkeypatch):
+    source = "കടലിലെ താപനില എത്രയാണ്?"
+
+    def failing_groq(*args, **kwargs):
+        raise RuntimeError("temporary API failure")
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(
+        translator_module,
+        "_call_groq_api",
+        failing_groq,
+    )
+
+    assert translate_to_english(source) == source
 
 
 # ---------------------------------------------------------
@@ -411,3 +480,59 @@ def test_abbreviations_are_not_expanded_repeatedly():
 
     assert result.count("PFZ") == 1
     assert result.count("SST") == 1
+
+
+def test_malayalam_uses_groq_for_mixed_english_response(monkeypatch):
+    source = (
+        "The current Sea Surface Temperature (SST) is approximately "
+        "**28.4°C**.\n\nThis reading is based on data from today."
+    )
+    translated = (
+        "നിലവിലെ കടൽ ഉപരിതല താപനില (SST) ഏകദേശം **28.4°C** ആണ്."
+        "\n\nഇന്നത്തെ ഡാറ്റയെ അടിസ്ഥാനമാക്കിയുള്ളതാണ് ഈ വായന."
+    )
+    calls = []
+
+    def fake_groq(api_key, prompt, system_prompt):
+        calls.append((api_key, prompt, system_prompt))
+        return translated
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(translator_module, "_call_groq_api", fake_groq)
+
+    result = translate_response(source, "ml")
+
+    assert result == translated
+    assert calls[0][0] == "test-key"
+    assert calls[0][1] == source
+    assert "Translate English into Malayalam" in calls[0][2]
+
+
+def test_malayalam_missing_groq_key_keeps_deterministic_result(monkeypatch):
+    source = "The current Sea Surface Temperature (SST) is 28.4°C."
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+
+    result = translate_response(source, "ml")
+
+    assert "കടൽ ഉപരിതല താപനില" in result
+    assert "28.4°C" in result
+    assert "is" in result
+
+
+def test_malayalam_groq_failure_keeps_deterministic_result(monkeypatch):
+    source = "The current Sea Surface Temperature (SST) is 28.4°C."
+
+    def failing_groq(*args, **kwargs):
+        raise RuntimeError("temporary API failure")
+
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(
+        translator_module,
+        "_call_groq_api",
+        failing_groq,
+    )
+
+    result = translate_response(source, "ml")
+
+    assert "കടൽ ഉപരിതല താപനില" in result
+    assert "28.4°C" in result
