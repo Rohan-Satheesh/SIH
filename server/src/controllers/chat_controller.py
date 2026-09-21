@@ -58,6 +58,11 @@ def handle_chat_request(req: ChatRequest) -> CopilotResponse:
     # Route EVERYTHING ELSE to NeerMitra Agent Swarm
     engine = get_db_engine()
     try:
+        logger.info(
+            "Chat controller message: repr=%r unicode_points=%s",
+            req.message,
+            [hex(ord(ch)) for ch in req.message],
+        )
         agent_result = run_marine_agent(
             engine,
             req.message,
