@@ -382,6 +382,12 @@ def create_plan(state: AgentState) -> PlannerOutput:
         detected_intent,
         detected_agents,
     )
+    logger.info(
+        "Planner input: query=%r detected_intent=%r detected_agents=%r",
+        query,
+        detected_intent,
+        detected_agents,
+    )
 
     # --------------------------------------------------------
     # LLM planner
@@ -397,6 +403,7 @@ def create_plan(state: AgentState) -> PlannerOutput:
                 system_prompt=PLANNER_PROMPT,
                 response_format="json_object",
             )
+            logger.info("Planner LLM raw response=%r", res_text)
 
             if res_text:
                 plan_dict = json.loads(res_text)

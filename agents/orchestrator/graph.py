@@ -612,6 +612,11 @@ def run_marine_agent(
     """
 
     planner_query = translate_to_english(query)
+    logger.info(
+        "Planner query translation: original=%r translated=%r",
+        query,
+        planner_query,
+    )
 
     lat, lon, loc_name = extract_target_location(
         query,
