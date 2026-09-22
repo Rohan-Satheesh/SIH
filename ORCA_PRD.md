@@ -113,6 +113,9 @@ Given origin, destination, and vessel constraints → compute safest route consi
 | **Socket.IO Client** | Real-time WebSocket for chat + alerts | Free, OSS |
 | **React-Markdown** | Render agent responses with formatting | Free, OSS |
 
+> [!NOTE]
+> **Current Implementation Status**: The deployed frontend (Vercel) is built with **React 19 + TypeScript + Vite**, styled with **Tailwind CSS 4** (in place of Bootstrap 5), and charts are rendered with **Recharts** (in place of Chart.js). Leaflet, React-Leaflet, and React-Markdown are implemented exactly as planned. The app also ships as an installable **PWA** via `vite-plugin-pwa` (bonus, not originally scoped). Socket.IO Client is not yet wired in — chat currently runs over REST (`POST /api/chat`); see §11.
+
 ### 4.2 Backend
 
 | Tool | Purpose | Cost |
@@ -133,6 +136,9 @@ Given origin, destination, and vessel constraints → compute safest route consi
 | **ChromaDB** | Local vector store for RAG over advisories/docs | Free, OSS |
 | **Sentence-Transformers** | Embedding model for vector search | Free, OSS |
 
+> [!NOTE]
+> **Current Implementation Status**: The Planner → Weather/Ocean/Geospatial → Safety → Explainer pipeline is implemented and running on **LangGraph** exactly as designed (`agents/orchestrator/graph.py`), with an automatic plain-Python fallback if the `langgraph` package is unavailable at runtime. An additional **Knowledge Agent** (`agents/agents/knowledge_agent.py`) has been added beyond the original plan for advisory/glossary lookups. The LLM backbone actually deployed is the **Groq API**, not Gemini — this powers planning, response synthesis, and translation (see §4.6). ChromaDB and Sentence-Transformers are not yet wired in; see `yet_to_be_implemented.md`.
+
 ### 4.4 Data Pipeline & Storage
 
 | Tool | Purpose | Cost |
@@ -144,6 +150,9 @@ Given origin, destination, and vessel constraints → compute safest route consi
 | **PostgreSQL + PostGIS** | Spatial database for geofencing, boundaries, caching | Free, OSS |
 | **Supabase** | Hosted Postgres with PostGIS (free tier: 500MB) | Free tier |
 
+> [!NOTE]
+> **Current Implementation Status**: `pipeline/storage/b2_uploader.py` implements the B2 client via `boto3`/`b2sdk` exactly as planned, with an added resilience layer: it **automatically falls back to local filesystem storage** (`.mock_b2_storage/`) when B2 credentials are not configured, so the rest of the system keeps functioning either way. The Copernicus, NASA GEE, NOAA, INCOIS, and IMD ingestors are all implemented with a real API code path, each with the same "automatic mock fallback when credentials are absent" pattern.
+
 ### 4.5 Geospatial
 
 | Tool | Purpose | Cost |
@@ -153,6 +162,9 @@ Given origin, destination, and vessel constraints → compute safest route consi
 | **Natural Earth Data** | EEZ, country boundary, coastline shapefiles | Free, public domain |
 | **OpenRouteService** | Route computation API (free tier: 2000 req/day) | Free tier |
 
+> [!NOTE]
+> **Current Implementation Status**: `geo/services/boundary_service.py` runs native **PostGIS** spatial queries (`ST_Contains`, `ST_Distance`) when a database is reachable, and **automatically falls back to GeoPandas** in-memory boundary checks otherwise — both paths are real, working code, not stubs. Real EEZ, MPA, and fishing-sector boundary GeoJSON files are committed at `geo/boundaries/`. PFZ nearest-neighbor lookup, route-risk evaluation, composite risk grid, and bounding-box spatial queries are all implemented (`geo/analysis/pfz_analyzer.py`, `geo/services/route_service.py`, `geo/layers/risk_layer.py`, `geo/services/spatial_query_service.py`).
+
 ### 4.6 NLP & Multilingual
 
 | Tool | Purpose | Cost |
@@ -161,6 +173,9 @@ Given origin, destination, and vessel constraints → compute safest route consi
 | **Whisper (OpenAI)** | Speech-to-text for voice input | Free, OSS |
 | **gTTS / Coqui TTS** | Text-to-speech for voice responses | Free, OSS |
 | **langdetect / fastText** | Language detection | Free, OSS |
+
+> [!NOTE]
+> **Current Implementation Status**: Language detection is implemented and working for **7 of the 10 target languages** (English, Malayalam, Tamil, Telugu, Hindi, Kannada, Bengali — `nlp/detection/language_detector.py`). Translation is implemented and working, but via **Groq LLM prompting** (`nlp/translation/translator.py`) rather than a locally-hosted IndicTrans2 model, paired with a working marine-domain glossary layer (`nlp/translation/marine_glossary.py`, currently 121 protected term mappings) that prevents mistranslation of technical terms like PFZ, SST, and IMBL. Intent classification (`nlp/detection/intent_classifier.py`) is implemented and feeding the Planner Agent. Whisper and gTTS/Coqui are not yet wired in; see `yet_to_be_implemented.md`.
 
 ### 4.7 DevOps & Deployment
 
@@ -890,6 +905,9 @@ volumes:
   - [ ] Markdown formatting, tables, and system alerts render cleanly inside bubbles.
   - [ ] Chat window automatically scrolls down when streaming tokens arrive.
 
+> [!NOTE]
+> **Current Implementation Status**: Implemented and deployed as `src/pages/AssistantView.tsx` (root `src/`, not `client/src/`) with `react-markdown` rendering, quick-question shortcut pills, auto-scroll, and thumbs-up/thumbs-down feedback controls wired to `/api/feedback`. Chat responses arrive via a single REST call rather than a streamed WebSocket token feed, so the auto-scroll-on-streaming-tokens behavior applies to the whole response arriving at once rather than incremental chunks.
+
 ##### [CHUNK_ID: R1-C04] Multi-Modal Input & Voice Controller
 - **Role**: Role 1 (Frontend & UI Engineer)
 - **Target Files**: `client/src/components/Chat/InputBar.jsx`, `client/src/components/Chat/VoiceButton.jsx`
@@ -919,6 +937,9 @@ volumes:
 - **Acceptance Criteria**:
   - [ ] Map renders smoothly with dark tiles and zoom/pan controls.
   - [ ] Clicking any point on the map retrieves coordinate `[lat, lon]` for query submission.
+
+> [!NOTE]
+> **Current Implementation Status**: Implemented and deployed as `src/components/map/MarineMap.tsx` (React-Leaflet), rendering SST, chlorophyll, composite-risk, PFZ, and boundary layers plus route polylines, sourced from the live `/api/map/*` endpoints (see §11).
 
 ##### [CHUNK_ID: R1-C06] Interactive Route Drawer Component
 - **Role**: Role 1 (Frontend & UI Engineer)
@@ -1090,6 +1111,9 @@ volumes:
   - [ ] Returns structured point metrics object containing SST, wind, wave, and tide values.
   - [ ] Response includes source dataset timestamp metadata.
 
+> [!NOTE]
+> **Current Implementation Status (R2-C04, R2-C06)**: `GET /api/data/current`, `GET /api/data/freshness`, and the full `/api/map/*` family (layers, ocean-layers, composite-risk-grid, check-boundary, nearest-pfz, pfz, geofence-alert, route-risk, spatial-query) are implemented and deployed on the live Render backend (see §11).
+
 ##### [CHUNK_ID: R2-C07] User Feedback & Validation Endpoint
 - **Role**: Role 2 (Backend & API Engineer)
 - **Target Files**: `server/src/routes/feedback.py`, `server/src/controllers/feedback_controller.py`
@@ -1103,6 +1127,9 @@ volumes:
 - **Acceptance Criteria**:
   - [ ] Valid feedback requests save cleanly to PostgreSQL database.
   - [ ] Endpoint validates input schema and rejects invalid submissions.
+
+> [!NOTE]
+> **Current Implementation Status**: `POST /api/feedback` and `GET /api/feedback/stats` are implemented, deployed, and wired end-to-end to the frontend's thumbs-up/thumbs-down controls. Storage currently uses an **in-process list** rather than the PostgreSQL `feedback` table described above, so records do not persist across a backend restart — see `yet_to_be_implemented.md`.
 
 ##### [CHUNK_ID: R2-C08] Backblaze B2 S3 Client SDK Engine
 - **Role**: Role 2 (Backend & API Engineer)
@@ -1265,6 +1292,9 @@ volumes:
   - [ ] All tools execute cleanly when called by LangGraph agents.
   - [ ] Tool exceptions are caught gracefully.
 
+> [!NOTE]
+> **Current Implementation Status (R3-C01 – R3-C08)**: The LangGraph state machine, Planner, Weather, Ocean, Safety, Geospatial, and Explainer agents are all implemented and deployed exactly as specified (`agents/orchestrator/graph.py`, `agents/planner/planner.py`, `agents/agents/*.py`, `agents/analyzer/safety_rules.py`), with an extra **Knowledge Agent** added beyond scope. Tool wrappers exist under `agents/tools/` (`weather_tools.py`, `ocean_tools.py`, `geofence_tools.py`, `geospatial_tools.py`, `registry.py` — file names differ slightly from the original plan but the pattern matches). The Planner/Explainer LLM calls run on **Groq**, not Gemini (see §4.3).
+
 ##### [CHUNK_ID: R3-C09] Conversation Memory Checkpointer
 - **Role**: Role 3 (AI Agent Orchestration Engineer)
 - **Target Files**: `agents/memory/conversation_memory.py`, `context_store.py`
@@ -1380,6 +1410,9 @@ volumes:
 - **Acceptance Criteria**:
   - [ ] Extracts active IMD fishermen warnings cleanly.
   - [ ] Uploads hazard warning JSON to Backblaze B2.
+
+> [!NOTE]
+> **Current Implementation Status (R4-C01 – R4-C06)**: The B2 storage client and all five ingestors (Copernicus, NASA GEE, NOAA, INCOIS, IMD) are implemented (`pipeline/storage/b2_uploader.py`, `pipeline/ingestion/*.py`). Each ingestor includes a real API integration path plus an automatic `mock_mode` synthetic-data fallback that activates when live provider credentials are not configured, so downstream consumers always receive usable data. The APScheduler cron configuration (`pipeline/schedulers/cron_config.py`, `pipeline_runner.py`) exists and can be run via `python -m schedulers.pipeline_runner`; it is not currently auto-started by the running server process (see `yet_to_be_implemented.md`).
 
 ##### [CHUNK_ID: R4-C07] Scientific NetCDF & GeoTIFF Raster Processor
 - **Role**: Role 4 (Data Pipeline Engineer)
@@ -1554,6 +1587,9 @@ volumes:
   - [ ] Computes min/max/avg environmental metrics inside user polygon.
   - [ ] Returns summary statistics JSON payload.
 
+> [!NOTE]
+> **Current Implementation Status (R5-C01 – R5-C08)**: Boundary seeding, point-in-polygon checks, geofence proximity monitoring, nearest-PFZ calculation, route risk evaluation, SST/chlorophyll layer service, the composite risk heatmap, and the spatial area query aggregator are all implemented and deployed (`geo/services/`, `geo/analysis/`, `geo/layers/`). Point-in-polygon and distance queries run on native **PostGIS** when a spatial database is reachable, and **automatically fall back to an in-memory GeoPandas engine** otherwise — both are real code paths, not mocks. Real EEZ, MPA, and fishing-sector GeoJSON boundary data is committed at `geo/boundaries/`.
+
 ##### [CHUNK_ID: R5-C09] Temporal Environmental Trend Analyzer
 - **Role**: Role 5 (Geospatial Engineer)
 - **Target Files**: `geo/analysis/trend_analyzer.py`
@@ -1600,6 +1636,9 @@ volumes:
   - [ ] Accurately identifies 10 Indian coastal languages from sample query strings.
   - [ ] Handles short and conversational queries cleanly.
 
+> [!NOTE]
+> **Current Implementation Status**: `nlp/detection/language_detector.py` is implemented and deployed, currently covering **7 of the 10** target codes — `en`, `hi`, `ta`, `ml`, `te`, `kn`, `bn` (matches `shared/constants/languages.py`). `or` (Odia), `mr` (Marathi), and `gu` (Gujarati) are not yet supported by the detector.
+
 ##### [CHUNK_ID: R6-C02] IndicTrans2 Machine Translation Service
 - **Role**: Role 6 (NLP & Multilingual Engineer)
 - **Target Files**: `nlp/translation/translator.py`
@@ -1613,6 +1652,9 @@ volumes:
 - **Acceptance Criteria**:
   - [ ] Translates regional queries to English and agent answers back to regional language.
   - [ ] Preserves formatting tags and numerical values.
+
+> [!NOTE]
+> **Current Implementation Status**: `nlp/translation/translator.py` is implemented and deployed, and meets both acceptance criteria above — but via **Groq LLM prompting** rather than a locally-hosted IndicTrans2 model. It supports 9 language codes (`en, hi, ta, ml, te, kn, bn, mr, gu`) at the translation layer — one more than the language detector currently covers, but still missing Odia (`or`).
 
 ##### [CHUNK_ID: R6-C03] Marine & Fisheries Domain Glossary
 - **Role**: Role 6 (NLP & Multilingual Engineer)
@@ -1628,6 +1670,9 @@ volumes:
   - [ ] Technical marine terms translate accurately across all supported languages.
   - [ ] Prevents literal/incorrect translations of specialized terminology.
 
+> [!NOTE]
+> **Current Implementation Status**: `nlp/translation/marine_glossary.py` is implemented and deployed, currently holding **121** protected term mappings (below the 200+ target) covering the languages supported by the translator (§R6-C02).
+
 ##### [CHUNK_ID: R6-C04] Operational Intent Classification Engine
 - **Role**: Role 6 (NLP & Multilingual Engineer)
 - **Target Files**: `nlp/detection/intent_classifier.py`
@@ -1641,6 +1686,9 @@ volumes:
 - **Acceptance Criteria**:
   - [ ] Achieves > 90% accuracy on marine query test set.
   - [ ] Passes classified intent tag to Planner Agent.
+
+> [!NOTE]
+> **Current Implementation Status**: `nlp/detection/intent_classifier.py` is implemented, deployed, and feeding the Planner Agent's task decomposition. Reported accuracy against the >90% target has not been independently re-measured against the current test set.
 
 ##### [CHUNK_ID: R6-C05] Speech-To-Text Audio Transcription Pipeline
 - **Role**: Role 6 (NLP & Multilingual Engineer)
@@ -1846,6 +1894,25 @@ class PFZResult(BaseModel):
 | `/api/feedback` | POST | Role 2 | Role 1 | Submit recommendation feedback |
 | `/api/tts` | POST | Role 2 + 6 | Role 1 | Text-to-speech (returns audio URL) |
 | `/api/health` | GET | Role 2 | DevOps | Server health check |
+
+> [!NOTE]
+> **Current Implementation Status**: `/ws/chat` and `/api/tts` are not yet implemented (chat currently runs as `POST /api/chat` over REST). All other rows above are implemented and deployed. The actual backend also exposes several additional real, working endpoints beyond this original list:
+>
+> | Endpoint | Method | Description |
+> |---|---|---|
+> | `/api/chat` | POST | Main conversational endpoint (runs the full agent pipeline) |
+> | `/api/map/layers` | GET | List available map layers |
+> | `/api/map/layer/{layer_name}` | GET | Fetch a specific GeoJSON layer |
+> | `/api/map/ocean-layers` | GET | Ocean data layers (SST, chlorophyll) |
+> | `/api/map/composite-risk-grid` | GET | Composite risk heatmap grid |
+> | `/api/map/check-boundary` | GET | Point-in-polygon boundary check |
+> | `/api/map/nearest-pfz` | GET | Nearest PFZ lookup |
+> | `/api/map/pfz` | GET | PFZ advisory data |
+> | `/api/map/geofence-alert` | GET | Proximity alert for a location |
+> | `/api/map/route-risk` | POST | Risk-annotated route for a set of waypoints |
+> | `/api/map/spatial-query` | POST | Aggregate stats for a bounding box/polygon |
+> | `/api/feedback/stats` | GET | Aggregate feedback statistics |
+> | `/api/nlp/health` | GET | NLP subsystem health check |
 
 ---
 

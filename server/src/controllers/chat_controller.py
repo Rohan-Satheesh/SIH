@@ -6,6 +6,7 @@ from nlp.detection.language_detector import detect_language
 from nlp.llm.groq_client import clean_rag_leakage
 from agents.orchestrator.graph import run_marine_agent
 from server.src.config.database import get_db_engine
+from server.src.services.session_manager import upsert_session
 
 logger = logging.getLogger("neermitra.chat_controller")
 
@@ -58,6 +59,16 @@ def handle_chat_request(req: ChatRequest) -> CopilotResponse:
         requested_lang,
         detected_lang,
         req.language,
+    )
+
+    # Best-effort durable session record (PRD R2-C09). Never affects the
+    # response — upsert_session() swallows and logs any failure internally.
+    upsert_session(
+        session_id=req.session_id,
+        language=detected_lang,
+        vessel_type=req.vessel_type,
+        location=req.location,
+        last_query=req.message,
     )
 
     # Check casual greeting

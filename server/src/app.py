@@ -7,8 +7,11 @@ ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+import logging
+
 from fastapi import FastAPI
 from server.src.middleware.cors import setup_cors_middleware
+from server.src.config.database import init_db
 from server.src.routes.health import router as health_router
 from server.src.routes.chat import router as chat_router
 from server.src.routes.map_data import router as map_router, spatial_router, ais_router
@@ -16,6 +19,8 @@ from server.src.routes.nlp_health import router as nlp_health_router
 from server.src.routes.alerts import router as alerts_router
 from server.src.routes.data import router as data_router
 from server.src.routes.feedback import router as feedback_router
+
+logger = logging.getLogger("neermitra.app")
 
 app = FastAPI(
     title="ORCA Marine Intelligence Platform API",
@@ -25,6 +30,19 @@ app = FastAPI(
 
 # Setup CORS
 setup_cors_middleware(app)
+
+
+@app.on_event("startup")
+def _bootstrap_database_schema() -> None:
+    """
+    Best-effort: create sessions/feedback/alerts/alert_subscriptions/users
+    tables if they don't already exist. Never raises — a missing/unreachable
+    database must not prevent the API from starting.
+    """
+    try:
+        init_db()
+    except Exception:
+        logger.exception("Database schema bootstrap raised unexpectedly; continuing startup.")
 
 # Include Routers
 app.include_router(health_router)

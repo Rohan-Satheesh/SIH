@@ -6,6 +6,12 @@ PRD Reference: Section 11 — /api/alerts
 from fastapi import APIRouter, Query
 from datetime import datetime, timezone
 from typing import Optional
+import logging
+
+from server.src.config.database import get_db_session
+from server.src.models.alert import AlertSubscription
+
+logger = logging.getLogger("orca.alerts")
 
 router = APIRouter(prefix="/api", tags=["Alerts & Warnings"])
 
@@ -72,13 +78,37 @@ def subscribe_to_alerts(payload: dict):
     PRD R2-C05: POST /api/alerts/subscribe
     """
     session_id = payload.get("session_id", "default")
-    location = payload.get("location", {})
+    location = payload.get("location", {}) or {}
     radius_km = payload.get("radius_km", 50)
+    push_token = payload.get("push_token")
+
+    persisted_to_db = False
+    try:
+        with get_db_session() as db:
+            if db is not None:
+                db.add(
+                    AlertSubscription(
+                        session_id=session_id,
+                        push_token=push_token,
+                        latitude=location.get("lat"),
+                        longitude=location.get("lon"),
+                        radius_km=radius_km,
+                    )
+                )
+        # Only reached if the `with` block (including its commit-on-exit) did
+        # not raise, so this accurately reflects a completed database write.
+        persisted_to_db = db is not None
+    except Exception:
+        persisted_to_db = False
+        logger.exception(
+            "Failed to persist alert subscription to database; subscription was not saved."
+        )
 
     return {
         "status": "subscribed",
         "session_id": session_id,
         "location": location,
         "radius_km": radius_km,
+        "persisted_to_db": persisted_to_db,
         "message": "You will receive push notifications for active marine hazards in your area."
     }
