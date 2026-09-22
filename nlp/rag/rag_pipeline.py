@@ -41,7 +41,10 @@ def _try_semantic_retrieval(query: str, top_k: int):
     the latter case.
     """
     try:
-        if not _embedder.is_available() or not _vector_store.is_ready():
+        # Check the index (a cheap file-existence check) before touching the
+        # embedder (which loads the full transformer model into memory) --
+        # no point paying that memory cost if there's nothing to search yet.
+        if not _vector_store.is_ready() or not _embedder.is_available():
             return False, []
 
         query_vector = _embedder.embed_query(query)
