@@ -3,8 +3,15 @@ ORCA RAG Pipeline
 
 Loads marine knowledge documents, splits them into chunks,
 retrieves relevant chunks, and formats the final context.
+
+Retrieval tries real semantic (embedding-based) search first via
+nlp/rag/vector_store.py, and transparently falls back to the original
+keyword-based retriever whenever semantic search is disabled, its index
+hasn't been built yet, or anything about it fails -- see
+nlp/rag/embedder.py for why that fallback exists and is unconditional.
 """
 
+import logging
 from pathlib import Path
 
 from nlp.rag.document_loader import (
@@ -12,12 +19,41 @@ from nlp.rag.document_loader import (
     chunk_documents,
 )
 from nlp.rag.retriever import retrieve_documents
+from nlp.rag.embedder import MarineTextEmbedder
+from nlp.rag.vector_store import VectorStore
 
+logger = logging.getLogger("orca.rag.pipeline")
 
 DEFAULT_KNOWLEDGE_PATH = Path("data/knowledge")
 
 DEFAULT_CHUNK_SIZE = 500
 DEFAULT_CHUNK_OVERLAP = 50
+
+_embedder = MarineTextEmbedder()
+_vector_store = VectorStore()
+
+
+def _try_semantic_retrieval(query: str, top_k: int):
+    """
+    Returns (True, results) if semantic retrieval actually ran (results may
+    legitimately be an empty list), or (False, []) if it was skipped for
+    any reason -- callers should fall back to the keyword retriever only in
+    the latter case.
+    """
+    try:
+        if not _embedder.is_available() or not _vector_store.is_ready():
+            return False, []
+
+        query_vector = _embedder.embed_query(query)
+        if query_vector is None:
+            return False, []
+
+        return True, _vector_store.search(query_vector, top_k=top_k)
+    except Exception:
+        logger.exception(
+            "Semantic RAG retrieval failed unexpectedly; falling back to keyword search."
+        )
+        return False, []
 
 
 def format_document_context(
@@ -80,19 +116,22 @@ def get_relevant_context(
             "context": "",
         }
 
-    documents = load_documents(knowledge_path)
+    used_semantic, relevant_documents = _try_semantic_retrieval(query, top_k)
 
-    chunks = chunk_documents(
-        documents=documents,
-        chunk_size=chunk_size,
-        overlap=chunk_overlap,
-    )
+    if not used_semantic:
+        documents = load_documents(knowledge_path)
 
-    relevant_documents = retrieve_documents(
-        query=query,
-        documents=chunks,
-        top_k=top_k,
-    )
+        chunks = chunk_documents(
+            documents=documents,
+            chunk_size=chunk_size,
+            overlap=chunk_overlap,
+        )
+
+        relevant_documents = retrieve_documents(
+            query=query,
+            documents=chunks,
+            top_k=top_k,
+        )
 
     if not relevant_documents:
         return {
