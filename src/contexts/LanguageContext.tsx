@@ -239,7 +239,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     const saved = localStorage.getItem('neermitra_lang') as SupportedLanguage;
-    return saved && LANGUAGES.some(l => l.code === saved) ? saved : 'ML';
+    return saved && LANGUAGES.some(l => l.code === saved) ? saved : 'EN';
   });
 
   const setLanguage = (lang: SupportedLanguage) => {
