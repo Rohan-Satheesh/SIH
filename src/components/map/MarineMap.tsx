@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup, Polyline, useMap, useM
 import L from 'leaflet';
 import ScanEffect from '@/components/hud/ScanEffect';
 import ProvenanceModal from '@/components/hud/ProvenanceModal';
-import { Layers, ShieldCheck, Info, RefreshCw, ChevronDown, ChevronUp, Compass, Navigation, MapPin, Anchor } from 'lucide-react';
+import { Layers, ShieldCheck, Info, RefreshCw, ChevronDown, ChevronUp, Compass, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiUrl } from '@/services/api';
 import { 

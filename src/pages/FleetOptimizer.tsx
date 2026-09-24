@@ -4,14 +4,11 @@ import {
   ShieldCheck, 
   Play, 
   Sliders,
-  Info,
   Ship,
   Compass,
   Navigation,
   RotateCcw
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import ProvenanceModal from '@/components/hud/ProvenanceModal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import MarineMap, { type NavigationCourse } from '@/components/map/MarineMap';
 
